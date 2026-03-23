@@ -165,20 +165,24 @@ app.get('/api/data', requireApiKey, async (req, res) => {
 // --- 404 ---
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 
-// --- Start ---
-const server = app.listen(PORT, () => {
-  console.log(`AWWA Sheets API running on http://localhost:${PORT}`);
-  if (!process.env.SPREADSHEET_ID) console.warn('  ⚠ SPREADSHEET_ID not set');
-  if (!process.env.GOOGLE_CREDENTIALS) console.warn('  ⚠ GOOGLE_CREDENTIALS not set');
-  if (process.env.API_KEY) console.log('  ✓ API key auth enabled');
-});
+module.exports = app;
 
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`Port ${PORT} is already in use. Stop the other process or set PORT in .env (e.g. PORT=3002).`);
-    console.error(`Windows: netstat -ano | findstr ":${PORT}"  then  taskkill /PID <pid> /F`);
-  } else {
-    console.error(err);
-  }
-  process.exit(1);
-});
+// --- Start (local / Render / Node host only; Vercel injects VERCEL=1 and loads the exported app) ---
+if (require.main === module && !process.env.VERCEL) {
+  const server = app.listen(PORT, () => {
+    console.log(`AWWA Sheets API running on http://localhost:${PORT}`);
+    if (!process.env.SPREADSHEET_ID) console.warn('  ⚠ SPREADSHEET_ID not set');
+    if (!process.env.GOOGLE_CREDENTIALS) console.warn('  ⚠ GOOGLE_CREDENTIALS not set');
+    if (process.env.API_KEY) console.log('  ✓ API key auth enabled');
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`Port ${PORT} is already in use. Stop the other process or set PORT in .env (e.g. PORT=3002).`);
+      console.error(`Windows: netstat -ano | findstr ":${PORT}"  then  taskkill /PID <pid> /F`);
+    } else {
+      console.error(err);
+    }
+    process.exit(1);
+  });
+}

@@ -82,11 +82,28 @@ Optional query overrides: `?api_url=https://your-render-service.onrender.com` an
 
 ---
 
-## Deploy (Render + Netlify)
+## Deploy (Render / Vercel / Netlify)
 
-**Render (backend):** Create a Web Service with root directory `backend`, build `npm install`, start `npm start`. Set env vars from `.env.example` (paste `GOOGLE_CREDENTIALS` JSON as one line). You can use the repo `render.yaml` as a blueprint.
+### Render (traditional Node server)
 
-**Netlify (frontend):** New site from Git, base directory `frontend`, publish directory `.` (default). In `frontend/netlify.toml`, replace `YOUR-SERVICE` in the `/api/*` proxy `to` URL with your Render hostname. Set `ALLOWED_ORIGINS` on Render to your Netlify URL if you ever call the API URL directly from the browser (not required when using the Netlify proxy).
+Create a Web Service with **root directory** `backend`, build `npm install`, start `npm start`. Set env vars from `.env.example` (paste `GOOGLE_CREDENTIALS` JSON as one line). You can use the repo `render.yaml` as a blueprint.
+
+### Vercel (serverless — this folder)
+
+Uses [Express on Vercel](https://vercel.com/docs/frameworks/backend/express): `server.js` exports the app; no extra `vercel.json` is required.
+
+1. In [Vercel](https://vercel.com), **New Project** → import the same Git repo.
+2. Set **Root Directory** to **`backend`** (required).
+3. **Environment variables** (same as `.env.example`):
+   - **`GOOGLE_CREDENTIALS`**: paste the **full service account JSON as one line** (do not rely on a file path; Vercel has no `credentials.json` file unless you add it to the repo, which you should not).
+   - **`SPREADSHEET_ID`**, **`SHEET_RANGE`** (optional), **`API_KEY`** (optional), **`ALLOWED_ORIGINS`**: set to your real dashboard origin(s), e.g. `https://your-app.vercel.app` or `https://your-site.netlify.app` (comma-separated for multiple). Use `*` only for quick tests.
+4. Deploy. Your API base URL will be `https://<project>.vercel.app` with paths `/health`, `/api/conversations`, etc.
+
+**Dashboard:** If the UI is hosted on another domain, set **`PRODUCTION_API_BASE`** in `frontend/first.html` to that API origin (no trailing slash), or open the dashboard with `?api_url=https://<project>.vercel.app`.
+
+### Netlify (frontend only)
+
+New site from Git, base directory `frontend`, publish directory `.` (default). In `frontend/netlify.toml`, point the `/api/*` proxy to your API host (Render or Vercel).
 
 ---
 
