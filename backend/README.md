@@ -98,7 +98,7 @@ Optional: `?api_url=...` and `?api_key=...` on the URL for testing.
 
 | Variable | Render notes |
 |----------|----------------|
-| `GOOGLE_CREDENTIALS` | Paste the **entire** service account JSON as **one line** (no `credentials.json` file on disk). |
+| `GOOGLE_CREDENTIALS` | Paste the **entire** service account JSON as **one line** (value must start with `{`). **Do not** set `./credentials.json` on Render — that file is not in the repo and does not exist on the server. |
 | `SPREADSHEET_ID` | Required. |
 | `SHEET_RANGE` | Optional; default `Sheet1!A:Z`. |
 | `API_KEY` | Optional; must match what the dashboard sends as `X-Api-Key`. |

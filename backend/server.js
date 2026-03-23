@@ -49,13 +49,23 @@ async function getSheetsClient() {
   }
 
   let key;
-  if (credentials.trim().startsWith('{')) {
-    key = JSON.parse(credentials);
+  const trimmed = credentials.trim();
+  if (trimmed.startsWith('{')) {
+    key = JSON.parse(trimmed);
   } else {
     const fs = require('fs');
     const path = require('path');
-    const keyPath = path.resolve(process.cwd(), credentials.trim());
-    key = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
+    const keyPath = path.resolve(process.cwd(), trimmed);
+    try {
+      key = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        throw new Error(
+          `GOOGLE_CREDENTIALS file not found: ${trimmed}. On Render/Netlify paste the full service account JSON as the env value (starting with {), not a file path.`
+        );
+      }
+      throw err;
+    }
   }
 
   const auth = new google.auth.GoogleAuth({
