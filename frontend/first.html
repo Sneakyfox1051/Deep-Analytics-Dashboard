@@ -514,8 +514,8 @@
                 ? 'http://localhost:3001'
                 : '';
         const API_BASE_URL = (queryParams.get('api_url') || defaultApiBase).replace(/\/$/, '');
-        // Optional: ?api_key=... or leave empty if backend has no API_KEY (do not commit secrets in HTML).
-        const API_KEY = queryParams.get('api_key') || '';
+        // Must match backend .env API_KEY (sent as X-Api-Key for /api/* requests)
+        const API_KEY = '2311443287592038';
 
         const THEME = {
             primary: '#E67E22',

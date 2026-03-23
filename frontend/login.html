@@ -180,8 +180,6 @@
           />
         </div>
 
-       
-
         <div id="login-error" class="hidden text-sm font-bold text-rose-600">
           Invalid credentials.
         </div>
@@ -208,6 +206,14 @@
     const queryParams = new URLSearchParams(window.location.search);
     const next = queryParams.get('next') || 'first.html';
 
+    /** Keep api_url / api_key etc. when jumping to the dashboard after login */
+    function nextUrlWithPreservedParams() {
+      const p = new URLSearchParams(window.location.search);
+      p.delete('next');
+      const q = p.toString();
+      return q ? `${next}?${q}` : next;
+    }
+
     const form = document.getElementById('login-form');
     const errorEl = document.getElementById('login-error');
 
@@ -222,7 +228,7 @@
       if (userId === AUTH_USER_ID && password === AUTH_PASSWORD && name) {
         localStorage.setItem(AUTH_NAME_KEY, name);
         sessionStorage.setItem(AUTH_SESSION_KEY, 'true');
-        window.location.href = next;
+        window.location.href = nextUrlWithPreservedParams();
         return;
       }
 

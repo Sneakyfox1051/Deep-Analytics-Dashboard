@@ -110,6 +110,18 @@ function toJSON(rows) {
 
 // --- API Routes ---
 
+app.get('/', (req, res) => {
+  res.json({
+    service: 'awwa-sheets-api',
+    message: 'This URL is the API only. Open the dashboard from your static server (e.g. http://localhost:8080), not here.',
+    endpoints: {
+      health: 'GET /health',
+      conversations: 'GET /api/conversations (CSV or ?format=json)',
+      data: 'GET /api/data (CSV)'
+    }
+  });
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'awwa-sheets-api' });
 });
@@ -154,9 +166,19 @@ app.get('/api/data', requireApiKey, async (req, res) => {
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 
 // --- Start ---
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`AWWA Sheets API running on http://localhost:${PORT}`);
   if (!process.env.SPREADSHEET_ID) console.warn('  ⚠ SPREADSHEET_ID not set');
   if (!process.env.GOOGLE_CREDENTIALS) console.warn('  ⚠ GOOGLE_CREDENTIALS not set');
   if (process.env.API_KEY) console.log('  ✓ API key auth enabled');
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. Stop the other process or set PORT in .env (e.g. PORT=3002).`);
+    console.error(`Windows: netstat -ano | findstr ":${PORT}"  then  taskkill /PID <pid> /F`);
+  } else {
+    console.error(err);
+  }
+  process.exit(1);
 });
