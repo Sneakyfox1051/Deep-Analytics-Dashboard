@@ -114,7 +114,7 @@ Optional: `?api_url=...` and `?api_key=...` on the URL for testing.
 ## Deploy frontend (Netlify example)
 
 1. **New site** from Git → set **Base directory** to **`frontend`**, publish directory **`.`** (default).
-2. In **`frontend/netlify.toml`**, replace **`YOUR-SERVICE`** with your Render hostname (e.g. `awwa-sheets-api.onrender.com` — no `https://`).
+2. **`frontend/netlify.toml`** proxies `/api/*` to **`https://deep-analytics-dashboard.onrender.com`**. Change the `to` URL there if your Render service URL changes.
 3. Redeploy the Netlify site.
 
 ---
