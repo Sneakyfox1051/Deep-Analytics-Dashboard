@@ -76,34 +76,46 @@ X-Api-Key: your_secret_api_key
 
 ## Dashboard Configuration
 
-The dashboard is static HTML in the `frontend/` folder (`first.html`). It defaults to `http://localhost:3001` on your machine; on Netlify it uses same-origin `/api/*` (see `frontend/netlify.toml` proxy to Render).
+The dashboard lives in `frontend/` (`first.html`). Locally it talks to `http://localhost:3001`.
 
-Optional query overrides: `?api_url=https://your-render-service.onrender.com` and `?api_key=...` if you enabled `API_KEY` on the server.
+**Production (recommended):** Host the frontend on **Netlify** (or any static host) and proxy `/api/*` to Render using `frontend/netlify.toml` — then the browser calls same-origin `/api/...` and you avoid CORS setup.
+
+**Alternative:** Host the frontend anywhere and set **`PRODUCTION_API_BASE`** in `frontend/first.html` to your Render URL (e.g. `https://your-service.onrender.com`, no trailing slash). Then set **`ALLOWED_ORIGINS`** on Render to your real dashboard URL(s).
+
+Optional: `?api_url=...` and `?api_key=...` on the URL for testing.
 
 ---
 
-## Deploy (Render / Vercel / Netlify)
+## Deploy backend on Render
 
-### Render (traditional Node server)
+1. In the [Render Dashboard](https://dashboard.render.com), **New +** → **Web Service** and connect this GitHub repo (or use **Blueprints** with the repo `render.yaml` at the root).
+2. Configure the service:
+   - **Root Directory:** `backend`
+   - **Runtime:** Node
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+3. Under **Environment**, add the same variables as `.env.example` (use **Sync .env** or add manually):
 
-Create a Web Service with **root directory** `backend`, build `npm install`, start `npm start`. Set env vars from `.env.example` (paste `GOOGLE_CREDENTIALS` JSON as one line). You can use the repo `render.yaml` as a blueprint.
+| Variable | Render notes |
+|----------|----------------|
+| `GOOGLE_CREDENTIALS` | Paste the **entire** service account JSON as **one line** (no `credentials.json` file on disk). |
+| `SPREADSHEET_ID` | Required. |
+| `SHEET_RANGE` | Optional; default `Sheet1!A:Z`. |
+| `API_KEY` | Optional; must match what the dashboard sends as `X-Api-Key`. |
+| `ALLOWED_ORIGINS` | Your dashboard origin(s), comma-separated, e.g. `https://your-site.netlify.app`. Use `*` only for quick tests. |
 
-### Vercel (serverless — this folder)
+4. Deploy and wait for the service URL (e.g. `https://awwa-sheets-api.onrender.com`).
+5. Confirm **`GET /health`** returns JSON `{"status":"ok",...}`.
 
-Uses [Express on Vercel](https://vercel.com/docs/frameworks/backend/express): `server.js` exports the app; no extra `vercel.json` is required.
+**Cold starts:** Free tier services spin down; the first request after idle can take ~30–60s.
 
-1. In [Vercel](https://vercel.com), **New Project** → import the same Git repo.
-2. Set **Root Directory** to **`backend`** (required).
-3. **Environment variables** (same as `.env.example`):
-   - **`GOOGLE_CREDENTIALS`**: paste the **full service account JSON as one line** (do not rely on a file path; Vercel has no `credentials.json` file unless you add it to the repo, which you should not).
-   - **`SPREADSHEET_ID`**, **`SHEET_RANGE`** (optional), **`API_KEY`** (optional), **`ALLOWED_ORIGINS`**: set to your real dashboard origin(s), e.g. `https://your-app.vercel.app` or `https://your-site.netlify.app` (comma-separated for multiple). Use `*` only for quick tests.
-4. Deploy. Your API base URL will be `https://<project>.vercel.app` with paths `/health`, `/api/conversations`, etc.
+---
 
-**Dashboard:** If the UI is hosted on another domain, set **`PRODUCTION_API_BASE`** in `frontend/first.html` to that API origin (no trailing slash), or open the dashboard with `?api_url=https://<project>.vercel.app`.
+## Deploy frontend (Netlify example)
 
-### Netlify (frontend only)
-
-New site from Git, base directory `frontend`, publish directory `.` (default). In `frontend/netlify.toml`, point the `/api/*` proxy to your API host (Render or Vercel).
+1. **New site** from Git → set **Base directory** to **`frontend`**, publish directory **`.`** (default).
+2. In **`frontend/netlify.toml`**, replace **`YOUR-SERVICE`** with your Render hostname (e.g. `awwa-sheets-api.onrender.com` — no `https://`).
+3. Redeploy the Netlify site.
 
 ---
 

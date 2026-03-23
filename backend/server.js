@@ -167,7 +167,7 @@ app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 
 module.exports = app;
 
-// --- Start (local / Render / Node host only; Vercel injects VERCEL=1 and loads the exported app) ---
+// --- Start (local, Render, or any Node host; skipped when loaded as a module without being the entry script) ---
 if (require.main === module && !process.env.VERCEL) {
   const server = app.listen(PORT, () => {
     console.log(`AWWA Sheets API running on http://localhost:${PORT}`);

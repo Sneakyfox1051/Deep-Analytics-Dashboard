@@ -507,9 +507,9 @@
     <script>
         // Backend API (Google Sheets via your Node server)
         const queryParams = new URLSearchParams(window.location.search);
-        // When the dashboard is on a different host than the API (e.g. UI on Netlify/Vercel static, API on Vercel/Render), set this to your API origin (no trailing slash).
+        // If the UI is not using a same-host /api proxy (e.g. Netlify → Render), set your Render API URL here (no trailing slash).
         const PRODUCTION_API_BASE = '';
-        // Local: http://localhost:3001. Production: PRODUCTION_API_BASE or same-origin '' if you proxy /api on the same domain. Override anytime: ?api_url=https://...
+        // Local: localhost:3001. With Netlify proxy to Render: leave ''. Override: ?api_url=https://...
         const defaultApiBase =
             (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
                 ? 'http://localhost:3001'
