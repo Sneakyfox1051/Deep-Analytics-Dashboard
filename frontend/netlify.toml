@@ -1,0 +1,14 @@
+# Deploy this site from repo root with Base directory = "frontend"
+# (Site settings → Build & deploy → Base directory → frontend)
+
+[build]
+  publish = "."
+  # Static HTML + Tailwind CDN; no build step. Optional: npm ci && npm run css:build if you switch to compiled CSS.
+
+# Proxy API calls to Render so the dashboard can use same-origin /api/* (set CORS on Render only if you call the API URL directly).
+# Replace YOUR-SERVICE with your Render web service hostname (e.g. awwa-sheets-api.onrender.com).
+[[redirects]]
+  from = "/api/*"
+  to = "https://YOUR-SERVICE.onrender.com/api/:splat"
+  status = 200
+  force = true

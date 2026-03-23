@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Deep - Analytics Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #FFFBF7;
+            color: #2C3E50;
+        }
+
+        .brand-gradient-text {
+            background: linear-gradient(135deg, #E67E22 0%, #7D3C15 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #FEF5E7;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #FDEBD0;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #E67E22;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(230, 126, 34, 0.1);
+        }
+
+        /* Hide native marker on the <details> dropdown */
+        .keypoints-details > summary { list-style: none; }
+        .keypoints-details > summary::-webkit-details-marker { display: none; }
+
+        /* Profile dropdown */
+        .profile-details > summary { list-style: none; }
+        .profile-details > summary::-webkit-details-marker { display: none; }
+
+        /* Top 3 languages stat card */
+        .top-lang-stat-card {
+            background: linear-gradient(145deg, #ffffff 0%, #FFFBF7 45%, #FEF5E7 100%);
+            box-shadow: 0 4px 24px rgba(230, 126, 34, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+        .top-lang-stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle at 100% 0%, rgba(230, 126, 34, 0.12), transparent 70%);
+            pointer-events: none;
+            border-radius: 0 1.5rem 0 0;
+        }
+        .top-lang-slot {
+            position: relative;
+            border-radius: 1rem;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(254, 245, 231, 0.35) 100%);
+            border: 1px solid rgba(253, 235, 208, 0.9);
+            box-shadow: 0 2px 12px rgba(125, 60, 21, 0.06);
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+        .top-lang-slot:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(230, 126, 34, 0.12);
+            border-color: rgba(230, 126, 34, 0.35);
+        }
+        .top-lang-rank {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 900;
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        }
+        .top-lang-rank--1 {
+            background: linear-gradient(145deg, #F4D03F 0%, #E67E22 45%, #D35400 100%);
+        }
+        .top-lang-rank--2 {
+            background: linear-gradient(145deg, #E8E8E8 0%, #BDC3C7 50%, #7F8C8D 100%);
+            color: #2C3E50;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+        .top-lang-rank--3 {
+            background: linear-gradient(145deg, #E59866 0%, #CA6F1E 50%, #A04000 100%);
+        }
+        @keyframes top-lang-fade-in {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .top-lang-slot {
+            animation: top-lang-fade-in 0.45s ease backwards;
+        }
+        .top-lang-slot:nth-child(1) { animation-delay: 0.05s; }
+        .top-lang-slot:nth-child(2) { animation-delay: 0.12s; }
+        .top-lang-slot:nth-child(3) { animation-delay: 0.19s; }
+
+        /* India choropleth map */
+        #india-map-stage {
+            position: relative;
+            width: 100%;
+            max-width: 56rem;
+            margin-left: auto;
+            margin-right: auto;
+            overflow: visible;
+        }
+        #india-map-container {
+            overflow: visible;
+        }
+        #india-map-container > #india-map-stage > svg:first-of-type {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: min(78vh, 640px);
+        }
+        #india-map-container svg path[id] {
+            cursor: pointer;
+            vector-effect: non-scaling-stroke;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-10 relative overflow-x-hidden">
+
+
+    <div class="mx-auto">
+        <!-- Header Section -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-start gap-4 md:gap-6 mb-8 w-full">
+            <div class="flex items-start gap-4 min-w-0 flex-1">
+                <img
+                    src="Picture1.png"
+                    alt="Project Deep logo"
+                    class="w-12 h-12 object-contain drop-shadow-[0_6px_12px_rgba(230,126,34,0.25)] shrink-0"
+                    onerror="this.onerror=null; this.style.display='none';"
+                />
+                <div class="space-y-2 min-w-0">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FEF5E7] border border-[#FDEBD0] text-[#E67E22] text-[10px] font-black uppercase tracking-widest mb-2">
+                        Project Deep - Analytics Portal
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-black tracking-tight leading-tight">
+                        Digital Empowerment <br />
+                        <span class="brand-gradient-text">Engagement Platform</span>
+                    </h1>
+                    <p class="text-[#7F8C8D] font-medium text-lg">"जागरूकता से आत्मनिर्भरता" — Insights Dashboard</p>
+                </div>
+            </div>
+
+            <!-- Profile dropdown (top right) -->
+            <div class="flex items-center justify-end shrink-0 w-full md:w-auto md:ml-auto">
+                <details id="profile-menu-details" class="profile-details relative">
+                    <summary class="cursor-pointer list-none flex items-center gap-2 px-4 py-2 rounded-xl bg-white/95 border border-[#FDEBD0] shadow-sm hover:bg-[#FEF5E7]">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-user-round-icon lucide-circle-user-round shrink-0 text-[#E67E22]" aria-hidden="true">
+                            <path d="M18 20a6 6 0 0 0-12 0"/>
+                            <circle cx="12" cy="10" r="4"/>
+                            <circle cx="12" cy="12" r="10"/>
+                        </svg>
+                        <span id="profile-greeting" class="text-sm font-bold text-[#E67E22]">Hey ! Admin</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#7D3C15]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9l6 6 6-6"></path>
+                        </svg>
+                    </summary>
+                    <div class="absolute right-0 mt-2 w-40 bg-white/95 backdrop-blur border border-[#FDEBD0] rounded-xl shadow-lg z-20">
+                        <button id="btn-logout" class="w-full text-left px-3 py-2 text-sm font-bold text-[#7D3C15] hover:bg-[#FEF5E7] rounded-xl">
+                            Logout
+                        </button>
+                    </div>
+                </details>
+            </div>
+        </header>
+
+        <!-- Stats Dashboard -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8 items-start">
+            <div class="stat-card relative overflow-hidden p-5 sm:p-6 rounded-3xl border border-[#FDEBD0] bg-white transition-all duration-500 w-full">
+                <div class="flex justify-between items-start gap-3">
+                    <div>
+                        <p class="text-xs font-bold text-[#7F8C8D] uppercase mb-1">Total Interactions with Badi Didi</p>
+                        <h3 class="text-3xl font-black text-[#2C3E50]" id="stat-total-interactions">0</h3>
+                        <div class="flex items-center gap-1 mt-2 text-xs font-bold text-emerald-600 hidden" id="stat-total-interactions-change">
+                            <span class="px-1.5 py-0.5 rounded-md bg-emerald-50" id="stat-total-interactions-change-pill">↑ 0%</span>
+                            <span class="hidden" style="color: rgba(16, 185, 129, 1);" id="stat-total-interactions-change-label">vs last month</span>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-[#FEF5E7] rounded-2xl shrink-0 self-start">
+                        <i class="fa-solid fa-message text-[#E67E22] text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card relative overflow-hidden p-5 sm:p-6 rounded-3xl border border-[#FDEBD0] bg-white transition-all duration-500 w-full">
+                <div class="flex justify-between items-start gap-3">
+                    <div>
+                        <p class="text-xs font-bold text-[#7F8C8D] uppercase mb-1">Avg Time Per Chat</p>
+                        <h3 class="text-3xl font-black text-[#2C3E50]" id="stat-avg-duration">0 Minutes</h3>
+                        <div class="flex items-center gap-1 mt-2 text-xs font-bold text-emerald-600 hidden" id="stat-avg-duration-change">
+                            <span class="px-1.5 py-0.5 rounded-md bg-emerald-50" id="stat-avg-duration-change-pill">↑ 0%</span>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-[#FEF5E7] rounded-2xl shrink-0 self-start">
+                        <i class="fa-solid fa-clock text-[#E67E22] text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card relative overflow-hidden p-5 sm:p-6 rounded-3xl border border-[#FDEBD0] bg-white transition-all duration-500 w-full">
+                <div class="flex justify-between items-start gap-3">
+                    <div class="min-w-0 pr-1">
+                        <p class="text-xs font-bold text-[#7F8C8D] uppercase mb-1">Avg Messages per Chat</p>
+                        <h3 class="text-3xl font-black text-[#2C3E50]" id="stat-avg-messages">—</h3>
+                        
+                        <div class="flex items-center gap-1 mt-2 text-xs font-bold text-emerald-600 hidden" id="stat-avg-messages-change">
+                            <span class="px-1.5 py-0.5 rounded-md bg-emerald-50" id="stat-avg-messages-change-pill">↑ 0%</span>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-[#FEF5E7] rounded-2xl shrink-0 self-start">
+                        <i class="fa-solid fa-comments text-[#E67E22] text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card top-lang-stat-card relative overflow-hidden p-5 sm:p-6 rounded-3xl border border-[#FDEBD0]/90 transition-all duration-500 w-full flex flex-col xl:row-span-2">
+                <div class="relative z-[1] flex justify-between items-start gap-3 mb-3 shrink-0">
+                    <div class="min-w-0 flex-1">
+                        
+                        <p class="text-sm font-black text-[#2C3E50] tracking-tight">Top 3 languages</p>
+                        <p class="text-[11px] text-[#7F8C8D] font-medium mt-0.5 leading-snug">By number of conversations in your range</p>
+                    </div>
+                    <div class="p-3 rounded-2xl shrink-0 bg-gradient-to-br from-[#FEF5E7] to-[#FDEBD0]/80 border border-[#FDEBD0] shadow-sm">
+                        <i class="fa-solid fa-earth-asia text-[#E67E22] text-xl"></i>
+                    </div>
+                </div>
+                <div id="stat-top-languages-grid" class="relative z-[1] grid grid-cols-3 gap-2.5 sm:gap-3 w-full">
+                    <!-- Top 3 language slots -->
+                </div>
+            </div>
+
+            <!-- Date range: row 2 under first 3 cards only (xl); left of Top languages; full width on smaller breakpoints -->
+            <div class="col-span-full sm:col-span-2 xl:col-span-3 xl:row-start-2 min-w-0 flex flex-col sm:flex-row sm:flex-wrap sm:items-end sm:justify-between gap-4 p-4 sm:p-5 rounded-3xl bg-white border border-[#FDEBD0] shadow-sm">
+                <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-end gap-4 flex-1 min-w-0">
+                    <div class="flex flex-col gap-1 w-full sm:w-auto sm:min-w-[200px] sm:max-w-xs">
+                        <label for="filter-date-preset" class="text-[10px] font-black uppercase tracking-widest text-[#7D3C15]">Date range</label>
+                        <select id="filter-date-preset" class="w-full px-4 py-2.5 rounded-xl border border-[#FDEBD0] bg-[#FFFBF7] text-sm font-bold text-[#2C3E50] focus:ring-2 focus:ring-[#E67E22]/40 focus:border-[#E67E22] outline-none cursor-pointer">
+                            <option value="all">All time</option>
+                            <option value="last30">Last 30 days</option>
+                            <option value="this_month">This month</option>
+                            <option value="last_month">Last month</option>
+                            <option value="last3m">Last 3 months (90 days)</option>
+                            <option value="last6m">Last 6 months (183 days)</option>
+                            <option value="last12m">Last year (12 months)</option>
+                            <option value="custom">Custom range…</option>
+                        </select>
+                    </div>
+                    <div id="filter-custom-wrap" class="hidden flex flex-wrap items-end gap-3 w-full sm:w-auto sm:flex-1 min-w-0">
+                        <div class="flex flex-col gap-1">
+                            <label for="filter-date-from" class="text-[10px] font-black uppercase tracking-widest text-[#7D3C15]">From</label>
+                            <input type="date" id="filter-date-from" class="px-3 py-2.5 rounded-xl border border-[#FDEBD0] bg-white text-sm font-bold text-[#2C3E50] focus:ring-2 focus:ring-[#E67E22]/40 outline-none" />
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label for="filter-date-to" class="text-[10px] font-black uppercase tracking-widest text-[#7D3C15]">To</label>
+                            <input type="date" id="filter-date-to" class="px-3 py-2.5 rounded-xl border border-[#FDEBD0] bg-white text-sm font-bold text-[#2C3E50] focus:ring-2 focus:ring-[#E67E22]/40 outline-none" />
+                        </div>
+                        <button type="button" id="btn-filter-apply" class="px-5 py-2.5 rounded-xl bg-[#E67E22] text-white font-bold text-sm shadow-md hover:opacity-95 active:scale-[0.98] transition-all">
+                            Apply range
+                        </button>
+                    </div>
+                </div>
+                <p id="filter-active-hint" class="text-xs text-[#7F8C8D] font-medium leading-relaxed sm:text-right sm:max-w-[min(100%,20rem)] xl:max-w-[min(100%,22rem)] shrink-0"></p>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="mb-8">
+            <div class="inline-flex p-1.5 bg-white border border-[#FDEBD0] rounded-2xl shadow-sm">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 bg-[#E67E22] text-white shadow-lg">
+                    <i class="fa-solid fa-table"></i> Dashboard (Tables)
+                </button>
+                <button onclick="switchTab('analytics')" id="btn-analytics" class="tab-btn flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 text-[#7F8C8D] hover:bg-[#FEF5E7] hover:text-[#E67E22]">
+                    <i class="fa-solid fa-chart-line"></i> Detailed Analytics (Graphs)
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Tab (Table) -->
+        <div id="content-dashboard" class="tab-content active">
+            <div class="bg-white rounded-[40px] shadow-xl border border-[#FDEBD0] overflow-hidden  mx-auto">
+                <div class="p-8 border-b border-[#FDEBD0] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 class="font-black text-2xl text-[#2C3E50]">Conversation Logs</h3>
+                        <p class="text-[#7F8C8D] text-sm font-medium">Chat-by-Chat detailed breakdown</p>
+                    </div>
+                    <button id="btn-export-report" class="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#E67E22] text-white font-bold text-sm shadow-[0_10px_20px_rgba(230,126,34,0.3)] hover:scale-105 transition-all active:scale-95">
+                        <i class="fa-solid fa-download"></i> Export Report
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-[#FEF5E7]/50 text-left">
+                                <th class="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-[#7D3C15] border-r border-[#FDEBD0] whitespace-normal break-all">
+                                    <div class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-[#E67E22]">
+                                            <path d="M16 10a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 14.286V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                                            <path d="M20 9a2 2 0 0 1 2 2v10.286a.71.71 0 0 1-1.212.502l-2.202-2.202A2 2 0 0 0 17.172 19H10a2 2 0 0 1-2-2v-1"></path>
+                                        </svg>
+                                        <span>chat_id</span>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#7D3C15] border-r border-[#FDEBD0] whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-[#E67E22]">
+                                            <path d="M8 2v4"></path>
+                                            <path d="M16 2v4"></path>
+                                            <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+                                            <path d="M3 10h18"></path>
+                                            <path d="M8 14h.01"></path>
+                                            <path d="M12 14h.01"></path>
+                                            <path d="M16 14h.01"></path>
+                                            <path d="M8 18h.01"></path>
+                                            <path d="M12 18h.01"></path>
+                                            <path d="M16 18h.01"></path>
+                                        </svg>
+                                        <span>Date</span>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#7D3C15] border-r border-[#FDEBD0]">
+                                    <div class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-[#E67E22]">
+                                            <path d="M12 2a10 10 0 0 1 7.38 16.75"></path>
+                                            <path d="M12 6v6l4 2"></path>
+                                            <path d="M2.5 8.875a10 10 0 0 0-.5 3"></path>
+                                            <path d="M2.83 16a10 10 0 0 0 2.43 3.4"></path>
+                                            <path d="M4.636 5.235a10 10 0 0 1 .891-.857"></path>
+                                            <path d="M8.644 21.42a10 10 0 0 0 7.631-.38"></path>
+                                        </svg>
+                                        <span>Start</span>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#7D3C15] border-r border-[#FDEBD0]">
+                                    <div class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-[#E67E22]">
+                                            <path d="M12 2a10 10 0 0 1 7.38 16.75"></path>
+                                            <path d="M12 6v6l4 2"></path>
+                                            <path d="M2.5 8.875a10 10 0 0 0-.5 3"></path>
+                                            <path d="M2.83 16a10 10 0 0 0 2.43 3.4"></path>
+                                            <path d="M4.636 5.235a10 10 0 0 1 .891-.857"></path>
+                                            <path d="M8.644 21.42a10 10 0 0 0 7.631-.38"></path>
+                                        </svg>
+                                        <span>End</span>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#7D3C15] border-r border-[#FDEBD0]">
+                                    <div class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-[#E67E22]">
+                                            <path d="M5 22h14"></path>
+                                            <path d="M5 2h14"></path>
+                                            <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path>
+                                            <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path>
+                                        </svg>
+                                        <span>Duration</span>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#7D3C15] border-r border-[#FDEBD0]">Language</th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#7D3C15] border-r border-[#FDEBD0] whitespace-normal break-words w-[240px] max-w-[240px]">Key Points</th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#7D3C15] border-r border-[#FDEBD0]">User Intent</th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#7D3C15] border-r border-[#FDEBD0] whitespace-normal break-words">Badi Didi Summary</th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#7D3C15] border-r border-[#FDEBD0]">Msgs_Xchg</th>
+                                <th class="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[#7D3C15]">Topics</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- JS will inject rows here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab (Graphs) -->
+        <div id="content-analytics" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- 1. Chat Volume Over Time -->
+                <div class="bg-white p-8 rounded-[40px] shadow-xl border border-[#FDEBD0]">
+                    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
+                        <div>
+                            <h3 class="font-black text-2xl mb-1 text-[#2C3E50] flex flex-wrap items-center gap-2">
+                              
+                                <span> Chat Volume Over Time</span>
+                            </h3>
+                            <p class="text-sm text-[#7F8C8D] font-medium">Unique <span class="font-bold text-[#E67E22]">chats</span> per period</p>
+                          
+                        </div>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-[#7D3C15] flex items-center gap-2 shrink-0">
+                            View
+                            <select id="chat-volume-granularity" class="px-3 py-2 rounded-xl border border-[#FDEBD0] bg-[#FFFBF7] text-sm font-bold text-[#2C3E50] outline-none focus:ring-2 focus:ring-[#E67E22]/30 cursor-pointer">
+                                <option value="day">By day</option>
+                                <option value="week">By week</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="h-80 w-full"><canvas id="chatVolumeChart"></canvas></div>
+                </div>
+                <!-- Language Chart -->
+                <div class="bg-white p-8 rounded-[40px] shadow-xl border border-[#FDEBD0]">
+                    <h3 class="font-black text-2xl mb-8 text-[#2C3E50]">Language Adoption</h3>
+                    <div class="h-80"><canvas id="languageChart"></canvas></div>
+                </div>
+                <!-- Avg chat duration: bar chart, segment by day (distinct day colours) or language (palette) -->
+                <div class="lg:col-span-2 bg-white p-8 rounded-[40px] shadow-xl border border-[#FDEBD0]">
+                    <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4 mb-6">
+                        <div>
+                            <h3 class="font-black text-2xl text-[#2C3E50]">Avg Time per Chat</h3>
+                            <p class="text-sm text-[#7F8C8D] font-medium mt-1">Average minutes per chat — <span class="text-[#E67E22] font-bold">by day</span> uses a fixed colour per weekday; <span class="text-[#E67E22] font-bold">by language</span> uses the language palette</p>
+                        </div>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-[#7D3C15] flex items-center gap-2 shrink-0">
+                            Segment
+                            <select id="duration-segment-mode" class="px-3 py-2 rounded-xl border border-[#FDEBD0] bg-white text-sm font-bold text-[#2C3E50] outline-none focus:ring-2 focus:ring-[#E67E22]/30">
+                                <option value="day">By day of week</option>
+                                <option value="language">By language</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="h-80"><canvas id="durationSegmentChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Geographic: India — inside Detailed Analytics tab -->
+            <section id="geo-india-section" class="mt-8 mb-2" aria-labelledby="geo-india-heading">
+                <div class="bg-white rounded-[40px] shadow-xl border border-[#FDEBD0] overflow-hidden">
+                    <div class="p-8 border-b border-[#FDEBD0]">
+                        <h2 id="geo-india-heading" class="font-black text-2xl mb-1 text-[#2C3E50] flex flex-wrap items-center gap-2">
+                           
+                            <span>Outreach of Badi Didi— India</span>
+                        </h2>
+                        <p class="text-sm text-[#7F8C8D] font-medium">Each state/UT is shaded by <span class="font-bold text-[#E67E22]">sample user count</span> (darker = more). Hover a region for details. Data is illustrative.</p>
+                    </div>
+                    <div class="p-6 md:p-8 lg:flex lg:gap-8 lg:items-start">
+                        <div class="flex-1 min-w-0 relative">
+                            <div id="india-map-container" class="rounded-2xl border border-[#FDEBD0]/80 bg-[#FFFBF7] p-2 md:p-4">
+                                <p class="text-xs text-[#7F8C8D] text-center py-8">Loading map…</p>
+                            </div>
+                            <div id="india-map-tooltip" class="pointer-events-none fixed z-[100] hidden rounded-xl border border-[#FDEBD0] bg-white/95 px-3 py-2 text-xs font-bold text-[#2C3E50] shadow-lg max-w-[min(90vw,18rem)]" role="status"></div>
+                        </div>
+                        <div class="mt-6 lg:mt-0 lg:w-72 shrink-0 flex flex-col gap-4">
+                            <div class="rounded-2xl border border-[#FDEBD0] bg-[#FEF5E7]/50 p-4">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-[#7D3C15] mb-2">Map shading (sample users)</p>
+                                <div class="h-4 rounded-full overflow-hidden border border-[#FDEBD0]" style="background: linear-gradient(90deg, #FEF5E7 0%, #FAD7A0 35%, #E67E22 70%, #7D3C15 100%);"></div>
+                                <div class="flex justify-between text-[10px] font-bold text-[#7F8C8D] mt-1">
+                                    <span id="india-map-legend-min">Lower</span>
+                                    <span id="india-map-legend-max">Higher</span>
+                                </div>
+                            </div>
+                            <div class="rounded-2xl border border-[#FDEBD0] p-4 flex flex-col min-h-0 max-h-[min(70vh,28rem)]">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-[#7D3C15] mb-2 shrink-0">All states &amp; UT (sample %)</p>
+                                <ul id="india-map-top-list" class="space-y-2 text-sm font-bold text-[#2C3E50] overflow-y-auto custom-scrollbar pr-1 flex-1"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer class="mt-12 mb-6 flex items-center justify-center gap-4 opacity-50">
+            <div class="h-[1px] flex-1 bg-gradient-to-r from-transparent to-[#FDEBD0]"></div>
+            <div class="flex items-center gap-2 uppercase font-black text-[10px] tracking-[0.3em]">
+               
+                <div class="w-4 h-4 bg-[#E67E22] rounded"></div>
+                <a href="https://evokeai.in/" target="_blank"> POWERED BY EVOKE AI </a>
+            
+            </div>
+            <div class="h-[1px] flex-1 bg-gradient-to-l from-transparent to-[#FDEBD0]"></div>
+        </footer>
+    </div>
+
+    <script>
+        // Backend API (Google Sheets via your Node server)
+        const queryParams = new URLSearchParams(window.location.search);
+        // Production: leave api_url unset and use Netlify /api/* proxy to Render (see netlify.toml).
+        // Local: defaults to http://localhost:3001. Override: ?api_url=https://your-api.onrender.com
+        const defaultApiBase =
+            (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                ? 'http://localhost:3001'
+                : '';
+        const API_BASE_URL = (queryParams.get('api_url') || defaultApiBase).replace(/\/$/, '');
+        // Optional: ?api_key=... or leave empty if backend has no API_KEY (do not commit secrets in HTML).
+        const API_KEY = queryParams.get('api_key') || '';
+
+        const THEME = {
+            primary: '#E67E22',
+            primaryDark: '#D35400',
+            secondary: '#F39C12',
+            accent: '#7D3C15',
+            pinkGold: '#FAD7A0'
+        };
+
+        const languagePalette = [
+            THEME.primary,
+            THEME.secondary,
+            THEME.accent,
+            THEME.pinkGold,
+            '#059669',   // fallback green
+            '#dc2626',   // fallback red
+            '#0284c7',   // fallback blue
+            '#9ca3af'    // fallback gray
+        ];
+
+        /** One distinct colour per weekday (Mon→Sun) for Avg Time per Chat — by day segment */
+        const DAY_OF_WEEK_BAR_COLORS = [
+            '#E67E22', // Mon
+            '#F39C12', // Tue
+            '#D35400', // Wed
+            '#7D3C15', // Thu
+            '#059669', // Fri
+            '#0284c7', // Sat
+            '#dc2626'  // Sun
+        ];
+
+        function parseCssColorToRgb(color) {
+            if (color == null) return [125, 60, 21];
+            const c = String(color).trim();
+            if (c.startsWith('#')) {
+                const hex = c.slice(1);
+                if (hex.length === 3) {
+                    return [
+                        parseInt(hex[0] + hex[0], 16),
+                        parseInt(hex[1] + hex[1], 16),
+                        parseInt(hex[2] + hex[2], 16)
+                    ];
+                }
+                if (hex.length >= 6) {
+                    return [
+                        parseInt(hex.slice(0, 2), 16),
+                        parseInt(hex.slice(2, 4), 16),
+                        parseInt(hex.slice(4, 6), 16)
+                    ];
+                }
+            }
+            const m = c.match(/rgba?\s*\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i);
+            if (m) return [+m[1], +m[2], +m[3]];
+            return [125, 60, 21];
+        }
+
+        function relativeLuminance(r, g, b) {
+            const a = [r, g, b].map((ch) => {
+                const x = Math.min(255, Math.max(0, ch)) / 255;
+                return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+            });
+            return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+        }
+
+        /** Dark brown text on light fills; white on darker / saturated bars (in-bar labels). */
+        function textColorForBarBackground(fill) {
+            const [r, g, b] = parseCssColorToRgb(fill);
+            const L = relativeLuminance(r, g, b);
+            return L > 0.55 ? '#4A3728' : '#FFFFFF';
+        }
+
+        let tableRows = [];
+        /** Master list after grouping (unfiltered); date filter slices this in memory. */
+        let fullConversationRows = [];
+        let allConversations = [];
+        let analyticsPayload = null;
+        let statsPayload = null;
+
+        let charts = {
+            language: null,
+            durationSegment: null,
+            chatVolume: null
+        };
+
+        function splitKeyPoints(value) {
+            return String(value || '')
+                .split('|')
+                .map(s => s.trim())
+                .filter(Boolean);
+        }
+
+        function pickChatId(row) {
+            const direct = ['chat_id', 'Chat_ID', 'Chat ID', 'chatId', 'CHAT_ID', 'correlation_id', 'session_id'];
+            for (const k of direct) {
+                if (row && row[k] != null && String(row[k]).trim()) return String(row[k]).trim();
+            }
+
+            // fallback: normalize keys
+            if (!row || typeof row !== 'object') return '';
+            const map = {};
+            Object.keys(row).forEach(k => {
+                map[String(k).toLowerCase().replace(/\s+/g, '')] = row[k];
+            });
+            const id = map.chatid || map.chatsessionid || map.sessionid || map.correlationid;
+            return id != null ? String(id).trim() : '';
+        }
+
+        function detectLanguage(text) {
+            if (!text || !text.trim()) return 'Unknown';
+            let tamil = 0, hindi = 0, telugu = 0, bengali = 0, malayalam = 0, english = 0;
+            for (const c of text) {
+                const code = c.charCodeAt(0);
+                if (code >= 0x0B80 && code <= 0x0BFF) tamil++;
+                else if (code >= 0x0900 && code <= 0x097F) hindi++;
+                else if (code >= 0x0C00 && code <= 0x0C7F) telugu++;
+                else if (code >= 0x0980 && code <= 0x09FF) bengali++;
+                else if (code >= 0x0D00 && code <= 0x0D7F) malayalam++;
+                else if ((code >= 0x0041 && code <= 0x005A) || (code >= 0x0061 && code <= 0x007A) || (code >= 0x00C0 && code <= 0x024F)) english++;
+            }
+            const total = tamil + hindi + telugu + bengali + malayalam + english;
+            if (total === 0) return 'Unknown';
+
+            const indicCount = [tamil, hindi, telugu, bengali, malayalam].filter(x => x > 0).length;
+            const hasMultiple = indicCount >= 2 || (indicCount >= 1 && english > 0 && total > 5);
+            if (hasMultiple && total > 3) return 'Mixed';
+            if (tamil > 0 && tamil >= Math.max(hindi, telugu, bengali, malayalam, english)) return 'Tamil';
+            if (hindi > 0 && hindi >= Math.max(tamil, telugu, bengali, malayalam, english)) return 'Hindi';
+            if (telugu > 0 && telugu >= Math.max(tamil, hindi, bengali, malayalam, english)) return 'Telugu';
+            if (bengali > 0 && bengali >= Math.max(tamil, hindi, telugu, malayalam, english)) return 'Bengali';
+            if (malayalam > 0 && malayalam >= Math.max(tamil, hindi, telugu, bengali, english)) return 'Malayalam';
+            return 'English';
+        }
+
+        function tryParseDate(val) {
+            if (val == null) return null;
+            const str = typeof val === 'string' ? val.trim() : String(val);
+            if (!str) return null;
+            const d = new Date(str);
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        const WEEK_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+        function buildDurationAnalytics(convs) {
+            const avgByDay = Object.fromEntries(WEEK_ORDER.map(d => [d, []]));
+            const avgByLang = {};
+            const durs = [];
+
+            for (const c of convs || []) {
+                const dm = c.duration_min;
+                if (Number.isFinite(dm) && dm > 0) {
+                    durs.push(dm);
+
+                    const dl = formatYMDToDayLabel(c.date);
+                    if (dl && avgByDay[dl]) avgByDay[dl].push(dm);
+
+                    const lang = c.language || 'Unknown';
+                    if (!avgByLang[lang]) avgByLang[lang] = [];
+                    avgByLang[lang].push(dm);
+                }
+            }
+
+            const avg = (arr) => {
+                if (!arr || !arr.length) return NaN;
+                return arr.reduce((a, b) => a + b, 0) / arr.length;
+            };
+
+            const overallAvgMin = durs.length ? avg(durs) : NaN;
+
+            const dayAvgs = {};
+            WEEK_ORDER.forEach(d => {
+                const v = avg(avgByDay[d]);
+                if (Number.isFinite(v)) dayAvgs[d] = v;
+            });
+
+            const langAvgs = {};
+            Object.keys(avgByLang).forEach(k => {
+                const v = avg(avgByLang[k]);
+                if (Number.isFinite(v)) langAvgs[k] = v;
+            });
+
+            return {
+                overallAvgMin,
+                avgByDay: dayAvgs,
+                avgByLang: langAvgs
+            };
+        }
+
+        function parseDurationToMinutes(durationValue) {
+            if (durationValue == null) return NaN;
+            const s = String(durationValue).trim();
+            if (!s || s === '-') return NaN;
+
+            // "8.4m" or "8m"
+            const mSuffix = s.match(/^([0-9]+(?:\.[0-9]+)?)\s*m$/i);
+            if (mSuffix) return parseFloat(mSuffix[1]);
+
+            // "HH:MM" or "MM:SS"
+            if (s.includes(':')) {
+                const parts = s.split(':').map(x => x.trim());
+                if (parts.length === 2) {
+                    const a = parseFloat(parts[0]);
+                    const b = parseFloat(parts[1]);
+                    if (!Number.isFinite(a) || !Number.isFinite(b)) return NaN;
+                    // Treat as MM:SS (e.g., 10:00 => 10 minutes)
+                    return a + (b / 60);
+                }
+                if (parts.length === 3) {
+                    const h = parseFloat(parts[0]);
+                    const m = parseFloat(parts[1]);
+                    const sec = parseFloat(parts[2]);
+                    if (!Number.isFinite(h) || !Number.isFinite(m) || !Number.isFinite(sec)) return NaN;
+                    return (h * 60) + m + (sec / 60);
+                }
+            }
+
+            // numeric string
+            const n = parseFloat(s);
+            return Number.isFinite(n) ? n : NaN;
+        }
+
+        function inferDurationMinFromMessages(messages) {
+            const dates = (messages || [])
+                .map(m => tryParseDate(m.created_at))
+                .filter(Boolean)
+                .sort((a, b) => a - b);
+            if (dates.length < 2) return NaN;
+            const ms = dates[dates.length - 1] - dates[0];
+            if (!Number.isFinite(ms) || ms <= 0) return NaN;
+            return ms / 60000;
+        }
+
+        function formatNumber(n) {
+            const num = Number(n);
+            if (!Number.isFinite(num)) return '0';
+            return num.toLocaleString('en-IN');
+        }
+
+        function formatImpactScore(v) {
+            const num = Number(v);
+            if (!Number.isFinite(num)) return '0';
+            return num.toFixed(1);
+        }
+
+        function formatDurationMin(v) {
+            const num = Number(v);
+            if (!Number.isFinite(num)) return '0 Minutes';
+            return num.toFixed(1) + ' Minutes';
+        }
+
+        function formatAvgMessagesPerChat(v) {
+            const num = Number(v);
+            if (!Number.isFinite(num)) return '—';
+            return num.toFixed(1);
+        }
+
+        function extractUserId(row) {
+            if (!row || typeof row !== 'object') return '';
+            const candidates = [
+                'user_id', 'User_ID', 'userId', 'userId2',
+                'beneficiary_id', 'Beneficiary_ID', 'beneficiaryId', 'beneficiary',
+                'client_id', 'Client_ID',
+                'mobile', 'Mobile', 'phone', 'Phone',
+                'correlation_id', 'Correlation_ID', 'session_id', 'Session_ID'
+            ];
+            for (const k of candidates) {
+                const v = row[k];
+                if (v != null && String(v).trim()) return String(v).trim();
+            }
+
+            // Try normalized key matching
+            const map = {};
+            Object.keys(row).forEach(k => {
+                map[String(k).toLowerCase().replace(/\s+/g, '')] = row[k];
+            });
+            const normalizedCandidates = ['userid', 'useridd', 'beneficiaryid', 'beneficiary', 'clientid'];
+            for (const key of normalizedCandidates) {
+                if (map[key] != null && String(map[key]).trim()) return String(map[key]).trim();
+            }
+
+            return '';
+        }
+
+        function monthKeyFromYMD(ymd) {
+            if (!ymd || typeof ymd !== 'string') return '';
+            const s = ymd.trim();
+            // Expect YYYY-MM-DD
+            const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (!m) return '';
+            return m[1] + '-' + m[2];
+        }
+
+        function prevMonthKey(monthKey) {
+            // monthKey: YYYY-MM
+            if (!monthKey || typeof monthKey !== 'string') return '';
+            const m = monthKey.match(/^(\d{4})-(\d{2})$/);
+            if (!m) return '';
+            const y = parseInt(m[1], 10);
+            const mo = parseInt(m[2], 10); // 1-12
+            const dt = new Date(Date.UTC(y, mo - 1, 1));
+            dt.setUTCMonth(dt.getUTCMonth() - 1);
+            const y2 = dt.getUTCFullYear();
+            const mo2 = dt.getUTCMonth() + 1;
+            return y2 + '-' + String(mo2).padStart(2, '0');
+        }
+
+        function formatYMDToDayLabel(ymd) {
+            // ymd like '2026-03-18' (treat as UTC to avoid local timezone shifting)
+            if (!ymd || !String(ymd).includes('-')) return null;
+            const parts = String(ymd).split('-');
+            if (parts.length < 3) return null;
+            const y = parseInt(parts[0], 10);
+            const m = parseInt(parts[1], 10);
+            const d = parseInt(parts[2], 10);
+            if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null;
+
+            const dt = new Date(Date.UTC(y, m - 1, d));
+            const dayIdx = dt.getUTCDay(); // 0=Sun..6=Sat
+            const labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            return labels[dayIdx];
+        }
+
+        const FILTER_STORAGE_PRESET = 'awwa_filter_preset';
+        const FILTER_STORAGE_FROM = 'awwa_filter_date_from';
+        const FILTER_STORAGE_TO = 'awwa_filter_date_to';
+
+        function startOfUTCDay(d) {
+            return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+        }
+
+        function endOfUTCDay(d) {
+            return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999));
+        }
+
+        /** Stable comparison for YYYY-MM-DD chat dates (UTC midday). */
+        function conversationDateForCompare(conv) {
+            const raw = conv && conv.date;
+            if (raw == null) return null;
+            const s = String(raw).trim();
+            const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (m) {
+                const y = parseInt(m[1], 10);
+                const mo = parseInt(m[2], 10);
+                const day = parseInt(m[3], 10);
+                if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(day)) return null;
+                return new Date(Date.UTC(y, mo - 1, day, 12, 0, 0, 0));
+            }
+            const parsed = tryParseDate(s);
+            return parsed ? startOfUTCDay(parsed) : null;
+        }
+
+        /** YYYY-MM-DD from conv.date (UTC), for bucketing chat volume. */
+        function ymdFromConversationDate(conv) {
+            const raw = conv && conv.date;
+            if (raw == null) return null;
+            const s = String(raw).trim();
+            const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+            const parsed = tryParseDate(s);
+            if (!parsed) return null;
+            const y = parsed.getUTCFullYear();
+            const mo = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+            const d = String(parsed.getUTCDate()).padStart(2, '0');
+            return `${y}-${mo}-${d}`;
+        }
+
+        /** Monday (UTC) of the ISO-style week containing ymd. */
+        function mondayWeekStartYMD(ymd) {
+            const m = String(ymd).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (!m) return null;
+            const y = parseInt(m[1], 10);
+            const mo = parseInt(m[2], 10);
+            const day = parseInt(m[3], 10);
+            if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(day)) return null;
+            const dt = new Date(Date.UTC(y, mo - 1, day, 12, 0, 0, 0));
+            const dow = dt.getUTCDay();
+            const offset = (dow + 6) % 7;
+            dt.setUTCDate(dt.getUTCDate() - offset);
+            const y2 = dt.getUTCFullYear();
+            const mo2 = String(dt.getUTCMonth() + 1).padStart(2, '0');
+            const d2 = String(dt.getUTCDate()).padStart(2, '0');
+            return `${y2}-${mo2}-${d2}`;
+        }
+
+        function formatShortDateLabelUTC(ymd) {
+            const m = String(ymd).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (!m) return String(ymd);
+            const dt = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+            return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+        }
+
+        /** Unique chat_id counts per calendar day / per week (Mon-start, UTC). */
+        function buildChatVolumeAnalytics(convs) {
+            const dailyMap = new Map();
+            const weeklyMap = new Map();
+
+            (convs || []).forEach((c, idx) => {
+                const ymd = ymdFromConversationDate(c);
+                if (!ymd) return;
+                const id = (c.chat_id != null && String(c.chat_id).trim())
+                    ? String(c.chat_id).trim()
+                    : `__row_${idx}`;
+
+                if (!dailyMap.has(ymd)) dailyMap.set(ymd, new Set());
+                dailyMap.get(ymd).add(id);
+
+                const wk = mondayWeekStartYMD(ymd);
+                if (wk) {
+                    if (!weeklyMap.has(wk)) weeklyMap.set(wk, new Set());
+                    weeklyMap.get(wk).add(id);
+                }
+            });
+
+            const dailyKeys = [...dailyMap.keys()].sort();
+            const weeklyKeys = [...weeklyMap.keys()].sort();
+
+            return {
+                daily: {
+                    labels: dailyKeys.map(k => formatShortDateLabelUTC(k)),
+                    values: dailyKeys.map(k => dailyMap.get(k).size),
+                    keys: dailyKeys
+                },
+                weekly: {
+                    labels: weeklyKeys.map(k => 'Week of ' + formatShortDateLabelUTC(k)),
+                    values: weeklyKeys.map(k => weeklyMap.get(k).size),
+                    keys: weeklyKeys
+                }
+            };
+        }
+
+        function getPresetDateRange(preset) {
+            if (!preset || preset === 'all' || preset === 'custom') return null;
+
+            const now = new Date();
+            const y = now.getUTCFullYear();
+            const m = now.getUTCMonth();
+            const d = now.getUTCDate();
+            const todayEnd = endOfUTCDay(now);
+
+            if (preset === 'last30') {
+                const mid = new Date(Date.UTC(y, m, d, 12, 0, 0, 0));
+                mid.setUTCDate(mid.getUTCDate() - 29);
+                return { start: startOfUTCDay(mid), end: todayEnd, label: 'Last 30 days' };
+            }
+            if (preset === 'this_month') {
+                return {
+                    start: new Date(Date.UTC(y, m, 1, 0, 0, 0, 0)),
+                    end: todayEnd,
+                    label: 'This month'
+                };
+            }
+            if (preset === 'last_month') {
+                const firstThis = new Date(Date.UTC(y, m, 1, 0, 0, 0, 0));
+                const lastPrev = new Date(firstThis);
+                lastPrev.setUTCDate(0);
+                const firstPrev = new Date(Date.UTC(lastPrev.getUTCFullYear(), lastPrev.getUTCMonth(), 1, 0, 0, 0, 0));
+                return { start: startOfUTCDay(firstPrev), end: endOfUTCDay(lastPrev), label: 'Last month' };
+            }
+            if (preset === 'last3m') {
+                const mid = new Date(Date.UTC(y, m, d, 12, 0, 0, 0));
+                mid.setUTCDate(mid.getUTCDate() - 89);
+                return { start: startOfUTCDay(mid), end: todayEnd, label: 'Last 3 months' };
+            }
+            if (preset === 'last6m') {
+                const mid = new Date(Date.UTC(y, m, d, 12, 0, 0, 0));
+                mid.setUTCDate(mid.getUTCDate() - 182);
+                return { start: startOfUTCDay(mid), end: todayEnd, label: 'Last 6 months' };
+            }
+            if (preset === 'last12m') {
+                const mid = new Date(Date.UTC(y, m, d, 12, 0, 0, 0));
+                mid.setUTCDate(mid.getUTCDate() - 364);
+                return { start: startOfUTCDay(mid), end: todayEnd, label: 'Last 12 months' };
+            }
+            return null;
+        }
+
+        function parseHTMLDateToUTCStart(s) {
+            if (!s || typeof s !== 'string') return null;
+            const m = s.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (!m) return null;
+            const y = parseInt(m[1], 10);
+            const mo = parseInt(m[2], 10);
+            const day = parseInt(m[3], 10);
+            if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(day)) return null;
+            return new Date(Date.UTC(y, mo - 1, day, 0, 0, 0, 0));
+        }
+
+        function filterConversationsByRange(convs, range) {
+            if (!range) return (convs || []).slice();
+            const t0 = range.start.getTime();
+            const t1 = range.end.getTime();
+            return (convs || []).filter(c => {
+                const cd = conversationDateForCompare(c);
+                if (!cd) return false;
+                const t = cd.getTime();
+                return t >= t0 && t <= t1;
+            });
+        }
+
+        function formatRangeHint(range, count, total) {
+            if (!range) {
+                return `${count.toLocaleString('en-IN')} conversation${count === 1 ? '' : 's'} (all time)`;
+            }
+            const opts = { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' };
+            const a = range.start.toLocaleDateString('en-IN', opts);
+            const b = range.end.toLocaleDateString('en-IN', opts);
+            return `${count.toLocaleString('en-IN')} of ${total.toLocaleString('en-IN')} chats · ${range.label || 'Custom'} (${a} – ${b} UTC)`;
+        }
+
+        function groupByChatId(rows) {
+            const groups = {};
+            rows.forEach(row => {
+                const chatId = pickChatId(row);
+                if (!chatId) return;
+
+                if (!groups[chatId]) {
+                    groups[chatId] = { messages: [], summaryData: null };
+                }
+
+                const role = row.role ?? row.Role ?? '';
+                const roleStr = role != null ? String(role).trim() : '';
+
+                const isSummaryRow =
+                    (!roleStr) &&
+                    (row.user_intent || row.User_Intent || row.Response_Summary || row['Date of Chat']);
+
+                if (isSummaryRow) {
+                    groups[chatId].summaryData = row;
+                    return;
+                }
+
+                const createdAt = row.created_at ?? row.createdAt ?? row.Created_At ?? '';
+                const createdAtStr = (createdAt && String(createdAt).trim()) ? String(createdAt).trim() : null;
+
+                groups[chatId].messages.push({
+                    role: (roleStr || '').toLowerCase(),
+                    text: (row.coversation || row.conversation || row.message || row.text || '').toString().trim(),
+                    created_at: createdAtStr
+                });
+            });
+
+            return groups;
+        }
+
+        function conversationsFromGrouped(conversationsGrouped) {
+            return Object.entries(conversationsGrouped).map(([chatId, g]) => {
+                const summary = g.summaryData || {};
+
+                const allText = g.messages.map(m => m.text || '').join(' ');
+                const language = summary.language || detectLanguage(allText);
+
+                const date = summary['Date of Chat'] || '';
+                const start = summary['Start Time'] || '';
+                const end = summary['End Time'] || '';
+
+                // Duration: prefer sheet value, otherwise infer from first/last message timestamps.
+                const providedDuration = summary.duration ?? summary.Duration ?? summary['Duration'];
+                const durationMinFromSheet = parseDurationToMinutes(providedDuration);
+                const durationMinFromMessages = (!Number.isFinite(durationMinFromSheet))
+                    ? inferDurationMinFromMessages(g.messages)
+                    : NaN;
+                const durationMin = Number.isFinite(durationMinFromSheet) ? durationMinFromSheet : durationMinFromMessages;
+
+                const durationText = providedDuration ? String(providedDuration) :
+                    (Number.isFinite(durationMin) ? Math.round(durationMin) + ':00' : '-');
+
+                const keyPoints = splitKeyPoints(summary['Key Points'] || '');
+
+                const userIntent = (summary.user_intent || summary.User_Intent || '').toString().trim() ||
+                    g.messages.find(m => m.role === 'user')?.text || '-';
+
+                const responseSummary = (summary.Response_Summary || summary['Response Summary'] || '').toString().trim() ||
+                    g.messages.find(m => m.role === 'assistant')?.text || '-';
+
+                const assistantPresent = !!responseSummary &&
+                    responseSummary !== '-' &&
+                    String(responseSummary).trim() !== 'No assistant response available';
+
+                const userId = extractUserId(summary);
+
+                const msgCountFromSheetRaw =
+                    summary['Number of User Chat Messages'] ||
+                    summary['Number_of_User_Chat_Messages'] ||
+                    summary.user_msg_count ||
+                    summary.userMsgCount;
+                const msgCountFromSheet = msgCountFromSheetRaw != null ? parseInt(msgCountFromSheetRaw, 10) : NaN;
+                const userMsgCount = Number.isFinite(msgCountFromSheet) ? msgCountFromSheet : g.messages.filter(m => m.role === 'user').length;
+
+                const queryTopics = summary['Query Topics'] || summary['Query_Topics'] || '';
+
+                return {
+                    chat_id: chatId,
+                    date,
+                    start_time: start,
+                    end_time: end,
+                    duration: durationText,
+                    duration_min: Number.isFinite(durationMin) ? durationMin : NaN,
+                    language,
+                    key_points: keyPoints,
+                    user_intent: userIntent,
+                    response_summary: responseSummary,
+                    assistant_present: assistantPresent,
+                    user_id: userId,
+                    message_count: userMsgCount,
+                    query_topics: queryTopics
+                };
+            }).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        }
+
+        function deriveDashboardFromConvs(convs) {
+            // Stats for top stat cards (computed from the current slice — respects date filter)
+            const allWithDates = convs.map(c => c.date).filter(d => typeof d === 'string' && d.includes('-'));
+            const maxDate = allWithDates.length ? allWithDates.sort().slice(-1)[0] : null;
+            const currentMonthKey = maxDate ? monthKeyFromYMD(maxDate) : '';
+            const lastMonthKey = currentMonthKey ? prevMonthKey(currentMonthKey) : '';
+
+            const byMonth = (key) => key
+                ? convs.filter(c => monthKeyFromYMD(c.date) === key)
+                : [];
+
+            const currentConvs = byMonth(currentMonthKey);
+            const lastConvs = byMonth(lastMonthKey);
+
+            const computeStats = (subset) => {
+                const interactions = subset.length;
+                const userIdSet = new Set(subset.map(c => c.user_id).filter(Boolean));
+                const activeBeneficiaries = userIdSet.size
+                    ? userIdSet.size
+                    : subset.reduce((s, c) => s + (Number(c.message_count) || 0), 0);
+
+                const durations = subset
+                    .map(c => c.duration_min)
+                    .filter(v => Number.isFinite(v) && v > 0);
+                const avgDurationMin = durations.length
+                    ? durations.reduce((s, v) => s + v, 0) / durations.length
+                    : NaN;
+
+                const assistantCount = subset.filter(c => c.assistant_present).length;
+                const impactScore = interactions
+                    ? (assistantCount / interactions) * 100
+                    : NaN;
+
+                const totalUserMsgs = subset.reduce((s, c) => s + (Number(c.message_count) || 0), 0);
+                const avgMessagesPerChat = interactions > 0 ? totalUserMsgs / interactions : NaN;
+
+                const langCounts = {};
+                subset.forEach(c => {
+                    const L = (c.language && String(c.language).trim()) || 'Unknown';
+                    langCounts[L] = (langCounts[L] || 0) + 1;
+                });
+                const sortedLangs = Object.entries(langCounts).sort((a, b) => b[1] - a[1]);
+                const topLanguages = [];
+                for (let i = 0; i < 3; i++) {
+                    if (sortedLangs[i]) {
+                        const [language, count] = sortedLangs[i];
+                        const share = interactions > 0 ? (count / interactions) * 100 : 0;
+                        topLanguages.push({ language, count, share });
+                    } else {
+                        topLanguages.push({ language: '—', count: 0, share: 0 });
+                    }
+                }
+
+                return {
+                    interactions,
+                    activeBeneficiaries,
+                    avgDurationMin,
+                    impactScore,
+                    avgMessagesPerChat,
+                    topLanguages
+                };
+            };
+
+            const totalStats = computeStats(convs);
+            const currentStats = computeStats(currentConvs);
+            const lastStats = computeStats(lastConvs);
+
+            const pctChange = (cur, prev) => {
+                const p = Number(prev);
+                const c = Number(cur);
+                if (!Number.isFinite(c) || !Number.isFinite(p) || p === 0) return null;
+                return ((c - p) / p) * 100;
+            };
+
+            statsPayload = {
+                total: totalStats,
+                current: currentStats,
+                last: lastStats,
+                changes: {
+                    interactions: pctChange(currentStats.interactions, lastStats.interactions),
+                    activeBeneficiaries: pctChange(currentStats.activeBeneficiaries, lastStats.activeBeneficiaries),
+                    avgDurationMin: pctChange(currentStats.avgDurationMin, lastStats.avgDurationMin),
+                    impactScore: pctChange(currentStats.impactScore, lastStats.impactScore),
+                    avgMessagesPerChat: pctChange(currentStats.avgMessagesPerChat, lastStats.avgMessagesPerChat)
+                }
+            };
+
+            // Analytics payload
+            const languageCounts = {};
+            for (const row of convs) {
+                languageCounts[row.language] = (languageCounts[row.language] || 0) + 1;
+            }
+
+            analyticsPayload = {
+                languageCounts,
+                duration: buildDurationAnalytics(convs),
+                chatVolume: buildChatVolumeAnalytics(convs)
+            };
+
+            tableRows = convs;
+        }
+
+        function buildTableAndAnalytics(conversationsGrouped) {
+            const convs = conversationsFromGrouped(conversationsGrouped);
+            fullConversationRows = convs;
+            deriveDashboardFromConvs(convs);
+        }
+
+        function readCustomRangeFromUI() {
+            const fromEl = document.getElementById('filter-date-from');
+            const toEl = document.getElementById('filter-date-to');
+            const fromS = fromEl && fromEl.value;
+            const toS = toEl && toEl.value;
+            if (!fromS || !toS) return { error: 'Select both start and end dates for a custom range.' };
+            const startRaw = parseHTMLDateToUTCStart(fromS);
+            const endRaw = parseHTMLDateToUTCStart(toS);
+            if (!startRaw || !endRaw) return { error: 'Invalid dates.' };
+            const end = endOfUTCDay(endRaw);
+            if (startRaw.getTime() > end.getTime()) return { error: 'Start date must be on or before end date.' };
+            return { range: { start: startRaw, end, label: 'Custom range' } };
+        }
+
+        function syncCustomWrapVisibility() {
+            const presetEl = document.getElementById('filter-date-preset');
+            const wrap = document.getElementById('filter-custom-wrap');
+            if (!presetEl || !wrap) return;
+            wrap.classList.toggle('hidden', presetEl.value !== 'custom');
+        }
+
+        function applyDateFilterFromUI() {
+            const presetEl = document.getElementById('filter-date-preset');
+            const hintEl = document.getElementById('filter-active-hint');
+            if (!presetEl) return;
+            if (!Array.isArray(fullConversationRows)) return;
+
+            const preset = presetEl.value;
+            let range = null;
+            let err = null;
+
+            if (preset === 'custom') {
+                const r = readCustomRangeFromUI();
+                if (r.error) err = r.error;
+                else range = r.range;
+            } else {
+                range = getPresetDateRange(preset);
+            }
+
+            if (err) {
+                if (hintEl) hintEl.textContent = err;
+                alert(err);
+                return;
+            }
+
+            try {
+                localStorage.setItem(FILTER_STORAGE_PRESET, preset);
+                if (preset === 'custom') {
+                    const fromEl = document.getElementById('filter-date-from');
+                    const toEl = document.getElementById('filter-date-to');
+                    if (fromEl && fromEl.value) localStorage.setItem(FILTER_STORAGE_FROM, fromEl.value);
+                    if (toEl && toEl.value) localStorage.setItem(FILTER_STORAGE_TO, toEl.value);
+                }
+            } catch (_) {}
+
+            const filtered = filterConversationsByRange(fullConversationRows, range);
+            deriveDashboardFromConvs(filtered);
+            updateStatCards(statsPayload);
+            populateTable(tableRows);
+            initCharts();
+
+            if (hintEl) {
+                hintEl.textContent = formatRangeHint(range, filtered.length, fullConversationRows.length);
+            }
+        }
+
+        function restoreDateFilterUI() {
+            try {
+                const p = localStorage.getItem(FILTER_STORAGE_PRESET);
+                const presetEl = document.getElementById('filter-date-preset');
+                if (p && presetEl && [...presetEl.options].some(o => o.value === p)) {
+                    presetEl.value = p;
+                }
+                if (p === 'custom') {
+                    const fromEl = document.getElementById('filter-date-from');
+                    const toEl = document.getElementById('filter-date-to');
+                    const f = localStorage.getItem(FILTER_STORAGE_FROM);
+                    const t = localStorage.getItem(FILTER_STORAGE_TO);
+                    if (fromEl && f) fromEl.value = f;
+                    if (toEl && t) toEl.value = t;
+                }
+            } catch (_) {}
+            syncCustomWrapVisibility();
+        }
+
+        function setupDateFilterControls() {
+            const presetEl = document.getElementById('filter-date-preset');
+            const btn = document.getElementById('btn-filter-apply');
+            if (presetEl) {
+                presetEl.addEventListener('change', () => {
+                    syncCustomWrapVisibility();
+                    if (presetEl.value !== 'custom') applyDateFilterFromUI();
+                });
+            }
+            if (btn) btn.addEventListener('click', () => applyDateFilterFromUI());
+        }
+
+        function populateTable(rows) {
+            const body = document.getElementById('table-body');
+            if (!body) return;
+
+            function renderKeyPointsCell(keyPoints) {
+                const arr = (keyPoints || [])
+                    .map(x => String(x))
+                    .map(s => s.trim())
+                    .filter(Boolean);
+
+                if (!arr.length) {
+                    return `<span class="text-xs italic text-[#7F8C8D]">-</span>`;
+                }
+
+                const chip = (pt) => `
+                    <span class="px-2 py-1 bg-[#FDEBD0]/30 text-[#7D3C15] text-[9px] font-bold rounded-md border border-[#FDEBD0] break-words max-w-full">
+                        ${escapeHtml(pt)}
+                    </span>
+                `;
+
+                if (arr.length === 1) {
+                    return chip(arr[0]);
+                }
+
+                const first = chip(arr[0]);
+                const rest = arr.slice(1).map(pt => chip(pt)).join('');
+
+                return `
+                    <div class="flex flex-col items-start gap-2 w-full">
+                        ${first}
+                        <details class="keypoints-details">
+                            <summary class="cursor-pointer whitespace-normal px-2 py-1 bg-[#FEF5E7] text-[#E67E22] text-[10px] font-black rounded-lg border border-[#FDEBD0] hover:bg-[#FDEBD0]/70">
+                                +${arr.length - 1} more
+                            </summary>
+                            <div class="mt-1 flex flex-wrap gap-1 w-full">
+                                ${rest}
+                            </div>
+                        </details>
+                    </div>
+                `;
+            }
+
+            body.innerHTML = (rows || []).map(log => `
+                <tr class="border-b border-[#FDEBD0] hover:bg-[#FFFBF7] transition-colors last:border-b-0">
+                    <td class="px-4 py-5 text-xs font-bold text-[#E67E22] font-mono border-r border-[#FDEBD0] whitespace-normal break-all min-w-0">${escapeHtml(log.chat_id)}</td>
+                    <td class="px-6 py-5 text-xs font-bold text-[#7F8C8D] border-r border-[#FDEBD0] whitespace-nowrap">${escapeHtml(log.date)}</td>
+                    <td class="px-6 py-5 text-xs border-r border-[#FDEBD0]">${escapeHtml(log.start_time)}</td>
+                    <td class="px-6 py-5 text-xs border-r border-[#FDEBD0]">${escapeHtml(log.end_time)}</td>
+                    <td class="px-6 py-5 border-r border-[#FDEBD0]">
+                        <span class="px-2 py-1 bg-[#FEF5E7] text-[#E67E22] text-[10px] font-black rounded-lg">${escapeHtml(log.duration)}</span>
+                    </td>
+                    <td class="px-6 py-5 text-xs font-bold text-[#7D3C15] border-r border-[#FDEBD0]">${escapeHtml(log.language)}</td>
+                    <td class="px-6 py-5 min-w-0 max-w-[240px] w-[240px] border-r border-[#FDEBD0]">
+                        ${renderKeyPointsCell(log.key_points)}
+                    </td>
+                    <td class="px-6 py-5 text-xs whitespace-normal break-words min-w-0 max-w-[220px] border-r border-[#FDEBD0]">${escapeHtml(log.user_intent)}</td>
+                    <td class="px-6 py-5 text-xs italic text-[#7F8C8D] whitespace-normal break-words min-w-0 max-w-[320px] border-r border-[#FDEBD0]">${escapeHtml(log.response_summary)}</td>
+                    <td class="px-6 py-5 text-center border-r border-[#FDEBD0]">
+                        <span class="w-8 h-8 inline-flex items-center justify-center bg-[#E67E22] text-white font-black text-xs rounded-full">${escapeHtml(log.message_count)}</span>
+                    </td>
+                    <td class="px-6 py-5 text-xs font-bold text-[#E67E22]">${escapeHtml(log.query_topics)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function exportReportCSV() {
+            const rows = tableRows || [];
+            if (!rows.length) {
+                alert('No data available to export yet.');
+                return;
+            }
+
+            const header = [
+                'chat_id',
+                'date',
+                'start_time',
+                'end_time',
+                'duration',
+                'language',
+                'key_points',
+                'user_intent',
+                'response_summary',
+                'message_count',
+                'query_topics'
+            ];
+
+            const esc = (v) => {
+                const s = String(v == null ? '' : v);
+                // Quote if contains comma, quotes or new lines
+                if (/[,"\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+                return s;
+            };
+
+            const csvLines = [
+                header.join(','),
+                ...rows.map(r => [
+                    r.chat_id,
+                    r.date,
+                    r.start_time,
+                    r.end_time,
+                    r.duration,
+                    r.language,
+                    // Key points should be joined by "| " (as requested)
+                    Array.isArray(r.key_points) ? r.key_points.join(' | ') : r.key_points,
+                    r.user_intent,
+                    r.response_summary,
+                    r.message_count,
+                    Array.isArray(r.query_topics) ? r.query_topics.join(' | ') : r.query_topics
+                ].map(esc).join(','))
+            ];
+
+            const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'awwa-report.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text == null ? '' : String(text);
+            return div.innerHTML;
+        }
+
+        function setChangeUI(wrapId, pillId, changePct, tonePositive = 'emerald', toneNegative = 'rose') {
+            const wrap = document.getElementById(wrapId);
+            const pill = document.getElementById(pillId);
+            if (!wrap || !pill) return;
+
+            if (changePct == null || !Number.isFinite(Number(changePct))) {
+                wrap.classList.add('hidden');
+                return;
+            }
+
+            const num = Number(changePct);
+            const isPositive = num >= 0;
+            const abs = Math.abs(num);
+
+            // Switch colors
+            wrap.classList.remove('text-emerald-600', 'text-rose-500');
+            pill.classList.remove('bg-emerald-50', 'bg-rose-50');
+
+            if (isPositive) {
+                wrap.classList.add('text-emerald-600');
+                pill.classList.add('bg-emerald-50');
+                pill.textContent = '↑ ' + abs.toFixed(1) + '%';
+            } else {
+                wrap.classList.add('text-rose-500');
+                pill.classList.add('bg-rose-50');
+                pill.textContent = '↓ ' + abs.toFixed(1) + '%';
+            }
+
+            wrap.classList.remove('hidden');
+        }
+
+        function renderTopLanguagesGrid(total) {
+            const grid = document.getElementById('stat-top-languages-grid');
+            if (!grid) return;
+            const slots = Array.isArray(total.topLanguages) && total.topLanguages.length
+                ? total.topLanguages
+                : [{ language: '—', count: 0, share: 0 }, { language: '—', count: 0, share: 0 }, { language: '—', count: 0, share: 0 }];
+            const rankLabel = ['1st', '2nd', '3rd'];
+            grid.innerHTML = [0, 1, 2].map((i) => {
+                const it = slots[i] || { language: '—', count: 0, share: 0 };
+                const has = it.count > 0 && it.language && it.language !== '—';
+                const chatsLine = has ? it.count.toLocaleString('en-IN') + ' chats' : '—';
+                const pctLine = has ? Number(it.share).toFixed(0) + '% of total' : '';
+                return `
+                    <div class="top-lang-slot flex flex-col items-stretch text-center px-2 pt-3 pb-2.5">
+                        <div class="flex justify-center shrink-0 mb-2">
+                            <div class="top-lang-rank top-lang-rank--${i + 1}" title="${rankLabel[i]}">${i + 1}</div>
+                        </div>
+                        <span class="font-black text-[#2C3E50] text-xs sm:text-sm leading-tight line-clamp-3 break-words w-full block py-1">${escapeHtml(it.language)}</span>
+                        <div class="mt-2 pt-2 border-t border-[#FDEBD0]/80 shrink-0 space-y-1.5">
+                            <span class="block text-[10px] font-bold text-[#7D3C15] tracking-wide">${chatsLine}</span>
+                            ${has ? `<span class="inline-flex items-center justify-center w-full rounded-lg bg-[#E67E22]/12 text-[10px] font-black text-[#D35400] py-1 px-1">${pctLine}</span>` : '<span class="block text-[10px] text-[#BDC3C7] font-medium">—</span>'}
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function updateStatCards(payload) {
+            if (!payload) return;
+
+            const total = payload.total || {};
+            const changes = payload.changes || {};
+
+            const totalEl = document.getElementById('stat-total-interactions');
+            const activeEl = document.getElementById('stat-active-beneficiaries');
+            const avgDurEl = document.getElementById('stat-avg-duration');
+            const impactEl = document.getElementById('stat-impact-score');
+            const avgMsgEl = document.getElementById('stat-avg-messages');
+
+            if (totalEl) totalEl.textContent = formatNumber(total.interactions);
+            if (activeEl) activeEl.textContent = formatNumber(total.activeBeneficiaries);
+            if (avgDurEl) avgDurEl.textContent = formatDurationMin(total.avgDurationMin);
+            if (impactEl) impactEl.textContent = formatImpactScore(total.impactScore);
+            if (avgMsgEl) avgMsgEl.textContent = formatAvgMessagesPerChat(total.avgMessagesPerChat);
+
+            renderTopLanguagesGrid(total);
+
+            setChangeUI(
+                'stat-total-interactions-change',
+                'stat-total-interactions-change-pill',
+                changes.interactions
+            );
+            setChangeUI(
+                'stat-active-beneficiaries-change',
+                'stat-active-beneficiaries-change-pill',
+                changes.activeBeneficiaries
+            );
+            setChangeUI(
+                'stat-avg-duration-change',
+                'stat-avg-duration-change-pill',
+                changes.avgDurationMin
+            );
+            setChangeUI(
+                'stat-impact-score-change',
+                'stat-impact-score-change-pill',
+                changes.impactScore
+            );
+            setChangeUI(
+                'stat-avg-messages-change',
+                'stat-avg-messages-change-pill',
+                changes.avgMessagesPerChat
+            );
+        }
+
+        function destroyCharts() {
+            Object.values(charts).forEach(c => {
+                try { if (c) c.destroy(); } catch (_) {}
+            });
+            charts = { language: null, durationSegment: null, chatVolume: null };
+        }
+
+        let durationAnalyticsControlsBound = false;
+        let chatVolumeControlsBound = false;
+
+        function getDurationSegmentChartData() {
+            const d = analyticsPayload && analyticsPayload.duration;
+            const mode = document.getElementById('duration-segment-mode')?.value || 'day';
+
+            if (!d) {
+                return {
+                    labels: WEEK_ORDER,
+                    values: WEEK_ORDER.map(() => 0),
+                    colors: DAY_OF_WEEK_BAR_COLORS.slice()
+                };
+            }
+
+            if (mode === 'day') {
+                return {
+                    labels: WEEK_ORDER,
+                    values: WEEK_ORDER.map(day => {
+                        const v = d.avgByDay[day];
+                        return Number.isFinite(v) ? v : 0;
+                    }),
+                    colors: DAY_OF_WEEK_BAR_COLORS.slice()
+                };
+            }
+
+            const entries = Object.entries(d.avgByLang || {}).sort((a, b) => b[1] - a[1]);
+            if (!entries.length) {
+                return { labels: ['—'], values: [0], colors: ['#cbd5e1'] };
+            }
+            return {
+                labels: entries.map(([k]) => k),
+                values: entries.map(([, v]) => v),
+                colors: entries.map((_, i) => languagePalette[i % languagePalette.length])
+            };
+        }
+
+        function updateDurationKpiAndCharts() {
+            const d = analyticsPayload && analyticsPayload.duration;
+
+            if (charts.durationSegment) {
+                const seg = getDurationSegmentChartData();
+                const ds = charts.durationSegment.data.datasets[0];
+                charts.durationSegment.data.labels = seg.labels;
+                ds.data = seg.values;
+                ds.backgroundColor = seg.colors;
+                ds.label =
+                    (document.getElementById('duration-segment-mode')?.value === 'language')
+                        ? 'Avg duration (min) by language'
+                        : 'Avg duration (min) by day';
+                charts.durationSegment.update();
+            }
+        }
+
+        function setupDurationAnalyticsControls() {
+            if (durationAnalyticsControlsBound) return;
+            durationAnalyticsControlsBound = true;
+
+            document.getElementById('duration-segment-mode')?.addEventListener('change', () => {
+                updateDurationKpiAndCharts();
+            });
+        }
+
+        function getChatVolumeChartData() {
+            const cv = analyticsPayload && analyticsPayload.chatVolume;
+            const mode = document.getElementById('chat-volume-granularity')?.value || 'day';
+            const bucket = mode === 'week' ? cv?.weekly : cv?.daily;
+            if (!bucket || !bucket.labels || !bucket.labels.length) {
+                return { labels: ['—'], values: [0], keys: [], mode };
+            }
+            return {
+                labels: bucket.labels.slice(),
+                values: bucket.values.slice(),
+                keys: (bucket.keys || []).slice(),
+                mode
+            };
+        }
+
+        function updateChatVolumeChart() {
+            if (!charts.chatVolume) return;
+            const seg = getChatVolumeChartData();
+            const ds = charts.chatVolume.data.datasets[0];
+            charts.chatVolume.data.labels = seg.labels;
+            ds.data = seg.values;
+            ds._periodKeys = seg.keys;
+            ds.label =
+                seg.mode === 'week'
+                    ? 'Unique chats per week '
+                    : 'Unique chats per day';
+            charts.chatVolume.update();
+        }
+
+        function setupChatVolumeControls() {
+            if (chatVolumeControlsBound) return;
+            chatVolumeControlsBound = true;
+            document.getElementById('chat-volume-granularity')?.addEventListener('change', () => {
+                updateChatVolumeChart();
+            });
+        }
+
+        function initCharts() {
+            if (!analyticsPayload) return;
+            destroyCharts();
+
+            const vol = getChatVolumeChartData();
+            const volCanvas = document.getElementById('chatVolumeChart');
+            if (volCanvas) {
+                charts.chatVolume = new Chart(volCanvas, {
+                    type: 'line',
+                    data: {
+                        labels: vol.labels,
+                        datasets: [{
+                            label: vol.mode === 'week'
+                                ? 'Unique chats per week '
+                                : 'Unique chats per day',
+                            data: vol.values,
+                            _periodKeys: vol.keys,
+                            borderColor: THEME.primary,
+                            backgroundColor: 'rgba(230, 126, 34, 0.14)',
+                            fill: true,
+                            tension: 0.3,
+                            pointBackgroundColor: THEME.primaryDark,
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 1,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { display: true, position: 'top', labels: { color: '#7D3C15', font: { weight: '700' } } },
+                            tooltip: {
+                                callbacks: {
+                                    title(items) {
+                                        const it = items[0];
+                                        const ds = it.chart.data.datasets[it.datasetIndex];
+                                        const keys = ds._periodKeys || [];
+                                        const k = keys[it.dataIndex];
+                                        const mode = document.getElementById('chat-volume-granularity')?.value || 'day';
+                                        if (k) {
+                                            return mode === 'week'
+                                                ? `Week starting ${k} (UTC)`
+                                                : `${k} (UTC)`;
+                                        }
+                                        return it.label || '';
+                                    },
+                                    label(ctx) {
+                                        const v = ctx.parsed.y;
+                                        return 'Unique chats: ' + (Number.isFinite(v) ? v : 0);
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { precision: 0, color: '#7F8C8D' },
+                                title: { display: true, text: 'Chats', color: '#7D3C15', font: { weight: '800', size: 11 } },
+                                grid: { color: 'rgba(253, 235, 208, 0.6)' }
+                            },
+                            x: {
+                                ticks: { maxRotation: 45, minRotation: 0, color: '#7F8C8D' },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            setupChatVolumeControls();
+
+            // Language Adoption (Bar)
+            const langEntries = Object.entries(analyticsPayload.languageCounts || {});
+            const langLabels = langEntries.map(([k]) => k);
+            const langValues = langEntries.map(([, v]) => v);
+
+            const langColors = langLabels.map((_, idx) => languagePalette[idx % languagePalette.length]);
+
+            charts.language = new Chart(document.getElementById('languageChart'), {
+                type: 'bar',
+                data: {
+                    labels: langLabels.length ? langLabels : ['Unknown'],
+                    datasets: [{
+                        data: langValues.length ? langValues : [1],
+                        backgroundColor: langColors.length ? langColors : [THEME.pinkGold],
+                        borderRadius: 10
+                    }]
+                },
+                plugins: [
+                    {
+                        id: 'lang-topright-legend',
+                        afterDatasetsDraw: (chart) => {
+                            const ctx = chart.ctx;
+                            if (!chart.chartArea) return;
+
+                            const { top, right } = chart.chartArea;
+                            if (right == null || top == null) return;
+
+                            const dataset = chart.data.datasets[0] || {};
+                            const labels = chart.data.labels || [];
+                            const values = Array.isArray(dataset.data) ? dataset.data : [];
+                            const colors = Array.isArray(dataset.backgroundColor) ? dataset.backgroundColor : [];
+
+                            const total = values.reduce((s, v) => s + (Number(v) || 0), 0);
+                            if (!total || total <= 0) return;
+
+                            const items = labels.map((lab, i) => {
+                                const value = Number(values[i] || 0);
+                                return {
+                                    lab,
+                                    value,
+                                    color: colors[i] || THEME.pinkGold
+                                };
+                            }).filter(it => it.value > 0);
+
+                            if (!items.length) return;
+
+                            items.sort((a, b) => b.value - a.value);
+
+                            const topN = 4;
+                            const topItems = items.slice(0, topN);
+                            const rest = items.slice(topN);
+                            const otherValue = rest.reduce((s, it) => s + it.value, 0);
+                            if (otherValue > 0) {
+                                topItems.push({ lab: 'Other', value: otherValue, color: 'rgba(125, 60, 21, 0.35)' });
+                            }
+
+                            const lines = topItems.map(it => {
+                                const pct = (it.value / total) * 100;
+                                return `${it.lab}: ${pct.toFixed(1)}%`;
+                            });
+
+                            // Layout
+                            ctx.save();
+                            ctx.font = '700 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial';
+                            const padding = 8;
+                            const lineHeight = 16;
+                            const squareSize = 8;
+
+                            const maxTextWidth = Math.max(...lines.map(t => ctx.measureText(t).width));
+                            const boxWidth = padding + squareSize + 6 + maxTextWidth + padding;
+                            const boxHeight = padding + (lines.length * lineHeight) + padding;
+
+                            const x = right - boxWidth - 10;
+                            const y = top + 10;
+                            const radius = 10;
+
+                            // Rounded rect background
+                            ctx.fillStyle = 'rgba(255, 253, 249, 0.88)';
+                            ctx.strokeStyle = 'rgba(176, 141, 87, 0.35)';
+                            ctx.lineWidth = 1;
+
+                            if (typeof ctx.roundRect === 'function') {
+                                ctx.beginPath();
+                                ctx.roundRect(x, y, boxWidth, boxHeight, radius);
+                                ctx.fill();
+                                ctx.stroke();
+                            } else {
+                                // Fallback (no roundRect)
+                                ctx.beginPath();
+                                ctx.moveTo(x + radius, y);
+                                ctx.lineTo(x + boxWidth - radius, y);
+                                ctx.quadraticCurveTo(x + boxWidth, y, x + boxWidth, y + radius);
+                                ctx.lineTo(x + boxWidth, y + boxHeight - radius);
+                                ctx.quadraticCurveTo(x + boxWidth, y + boxHeight, x + boxWidth - radius, y + boxHeight);
+                                ctx.lineTo(x + radius, y + boxHeight);
+                                ctx.quadraticCurveTo(x, y + boxHeight, x, y + boxHeight - radius);
+                                ctx.lineTo(x, y + radius);
+                                ctx.quadraticCurveTo(x, y, x + radius, y);
+                                ctx.closePath();
+                                ctx.fill();
+                                ctx.stroke();
+                            }
+
+                            // Text + color squares
+                            ctx.textBaseline = 'top';
+                            ctx.fillStyle = '#7D3C15';
+                            lines.forEach((text, i) => {
+                                const it = topItems[i];
+                                const lineY = y + padding + i * lineHeight;
+                                const sqX = x + padding;
+                                const sqY = lineY;
+
+                                ctx.fillStyle = it.color;
+                                ctx.fillRect(sqX, sqY + 3, squareSize, squareSize);
+                                ctx.fillStyle = '#7D3C15';
+
+                                const textX = sqX + squareSize + 6;
+                                ctx.fillText(text, textX, lineY);
+                            });
+
+                            ctx.restore();
+                        }
+                    },
+                    {
+                        id: 'lang-bar-value-labels',
+                        afterDatasetsDraw(chart) {
+                            const ctx = chart.ctx;
+                            const dataset = chart.data.datasets[0];
+                            const values = Array.isArray(dataset.data) ? dataset.data : [];
+                            const total = values.reduce((s, v) => s + (Number(v) || 0), 0);
+                            if (!total || total <= 0) return;
+
+                            const meta = chart.getDatasetMeta(0);
+                            const bgArr = dataset.backgroundColor;
+                            ctx.save();
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'top';
+
+                            meta.data.forEach((bar, i) => {
+                                if (!bar || bar.skip) return;
+                                const v = Number(values[i]) || 0;
+                                const pct = (v / total) * 100;
+                                const text = `${v.toLocaleString('en-IN')} / ${pct.toFixed(0)}%`;
+
+                                const { x, y, base } = bar.getProps(['x', 'y', 'base'], true);
+                                const top = Math.min(y, base);
+                                const barBottom = Math.max(y, base);
+                                const barH = barBottom - top;
+                                if (barH < 14) return;
+
+                                const fill = Array.isArray(bgArr) ? bgArr[i] : bgArr;
+                                const fillStyle = textColorForBarBackground(fill);
+                                const fontSize = barH < 32 ? 10 : 11;
+                                ctx.font = `700 ${fontSize}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+
+                                // Inside top of bar (e.g. Tamil bar: "4 / 15%" at inner top)
+                                const padTop = Math.max(6, Math.min(12, Math.round(barH * 0.08)));
+                                let textY = top + padTop;
+                                const lineH = fontSize + 3;
+                                if (textY + lineH > barBottom - 2) return;
+
+                                ctx.fillStyle = fillStyle;
+                                if (fillStyle === '#FFFFFF') {
+                                    ctx.shadowColor = 'rgba(45, 30, 20, 0.35)';
+                                    ctx.shadowBlur = 2;
+                                } else {
+                                    ctx.shadowBlur = 0;
+                                }
+                                ctx.fillText(text, x, textY);
+                                ctx.shadowBlur = 0;
+                            });
+                            ctx.restore();
+                        }
+                    }
+                ],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label(ctx) {
+                                    const v = Number(ctx.parsed.y) || 0;
+                                    const labels = ctx.chart.data.labels || [];
+                                    const values = ctx.chart.data.datasets[0].data || [];
+                                    const tot = values.reduce((s, x) => s + (Number(x) || 0), 0);
+                                    const pct = tot > 0 ? (v / tot) * 100 : 0;
+                                    return `${v.toLocaleString('en-IN')} / ${pct.toFixed(0)}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: false } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            const seg = getDurationSegmentChartData();
+
+            charts.durationSegment = new Chart(document.getElementById('durationSegmentChart'), {
+                type: 'bar',
+                data: {
+                    labels: seg.labels,
+                    datasets: [{
+                        label: 'Avg duration (min)',
+                        data: seg.values,
+                        backgroundColor: seg.colors,
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label(ctx) {
+                                    const v = ctx.parsed.y;
+                                    return 'Avg: ' + (Number.isFinite(v) ? v.toFixed(1) : '0') + ' min';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Minutes' },
+                            grid: { color: 'rgba(253, 235, 208, 0.6)' }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            updateDurationKpiAndCharts();
+            setupDurationAnalyticsControls();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('bg-[#E67E22]', 'text-white', 'shadow-lg');
+                b.classList.add('text-[#7F8C8D]');
+            });
+
+            document.getElementById(`content-${tabId}`).classList.add('active');
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            activeBtn.classList.remove('text-[#7F8C8D]');
+            activeBtn.classList.add('bg-[#E67E22]', 'text-white', 'shadow-lg');
+
+            // Charts need correct size when analytics tab becomes visible
+            if (tabId === 'analytics') {
+                setTimeout(() => {
+                    Object.values(charts).forEach(c => { try { if (c) c.resize(); } catch (_) {} });
+                }, 80);
+            }
+        }
+
+        /**
+         * Illustrative user counts by @svg-maps/india path ids (sample only).
+         * Keys: an, ap, ar, as, br, ch, ct, dn, dd, dl, ga, gj, hr, hp, jk, jh, ka, kl, ld, mp, mh, mn, ml, mz, nl, or, py, pb, rj, sk, tn, tg, tr, up, ut, wb
+         */
+        const FAKE_INDIA_USERS_BY_ID = {
+            an: 420, ap: 5600, ar: 480, as: 2100, br: 9800, ch: 310, ct: 3200,
+            dn: 180, dd: 95, dl: 8900, ga: 720, gj: 5400, hr: 2200, hp: 1100,
+            jk: 1800, jh: 3800, ka: 7100, kl: 3900, ld: 85, mp: 5100, mh: 12400,
+            mn: 650, ml: 900, mz: 750, nl: 550, or: 4200, py: 410, pb: 2400,
+            rj: 4800, sk: 320, tn: 6200, tg: 6800, tr: 800, up: 18200, ut: 1600, wb: 7200
+        };
+
+        function mixRgb(a, b, t) {
+            return [
+                Math.round(a[0] + (b[0] - a[0]) * t),
+                Math.round(a[1] + (b[1] - a[1]) * t),
+                Math.round(a[2] + (b[2] - a[2]) * t)
+            ];
+        }
+
+        function heatRgb(t) {
+            const low = [254, 245, 231];
+            const mid = [230, 126, 34];
+            const high = [125, 60, 21];
+            if (t <= 0) return low;
+            if (t >= 1) return high;
+            if (t < 0.5) return mixRgb(low, mid, t * 2);
+            return mixRgb(mid, high, (t - 0.5) * 2);
+        }
+
+        function rgbToCss(rgb) {
+            return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+        }
+
+        function showIndiaMapTooltip(e, name, n, pct) {
+            const el = document.getElementById('india-map-tooltip');
+            if (!el) return;
+            const pctLine = pct != null && Number.isFinite(pct)
+                ? `<span class="block text-[11px] text-[#7D3C15] mt-1">${pct.toFixed(1)}% of all-India sample</span>`
+                : '';
+            el.innerHTML = `<span class="block text-[10px] font-black uppercase tracking-widest text-[#7D3C15]">${escapeHtml(name)}</span><span class="block text-[#E67E22] mt-0.5">${Number(n).toLocaleString('en-IN')} users <span class="text-[#7F8C8D] font-medium">(sample)</span></span>${pctLine}`;
+            el.classList.remove('hidden');
+            const pad = 14;
+            const x = Math.min(e.clientX + pad, window.innerWidth - 220);
+            const y = Math.min(e.clientY + pad, window.innerHeight - 80);
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+        }
+
+        function hideIndiaMapTooltip() {
+            document.getElementById('india-map-tooltip')?.classList.add('hidden');
+        }
+
+        function initIndiaMap() {
+            const container = document.getElementById('india-map-container');
+            if (!container) return;
+
+            fetch('india-map.svg')
+                .then((res) => {
+                    if (!res.ok) throw new Error('Map load failed');
+                    return res.text();
+                })
+                .then((svgText) => {
+                    const wrap = document.createElement('div');
+                    wrap.innerHTML = svgText;
+                    const svg = wrap.querySelector('svg');
+                    if (!svg) return;
+
+                    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+                    const totalUsers = Object.values(FAKE_INDIA_USERS_BY_ID).reduce((a, b) => a + b, 0) || 1;
+
+                    const ranked = Object.entries(FAKE_INDIA_USERS_BY_ID)
+                        .map(([id, n]) => ({
+                            id,
+                            n,
+                            pct: (n / totalUsers) * 100,
+                            name: ''
+                        }))
+                        .sort((a, b) => b.n - a.n);
+
+                    ranked.forEach((r) => {
+                        const p = svg.querySelector(`path#${r.id}`);
+                        r.name = p?.getAttribute('aria-label') || r.id;
+                    });
+
+                    const values = Object.values(FAKE_INDIA_USERS_BY_ID);
+                    const minV = Math.min(...values);
+                    const maxV = Math.max(...values);
+
+                    svg.querySelectorAll('path[id]').forEach((path) => {
+                        const id = path.id;
+                        const n = FAKE_INDIA_USERS_BY_ID[id] ?? 0;
+                        const t = maxV === minV ? 0.5 : (n - minV) / (maxV - minV);
+                        path.style.fill = rgbToCss(heatRgb(t));
+                        path.style.stroke = 'rgba(255,255,255,0.9)';
+                        path.style.strokeWidth = '0.5';
+                        path.style.transition = 'filter 0.12s ease';
+
+                        const label = path.getAttribute('aria-label') || id;
+                        const pct = (n / totalUsers) * 100;
+                        path.addEventListener('mouseenter', (e) => {
+                            path.style.filter = 'brightness(1.07)';
+                            showIndiaMapTooltip(e, label, n, pct);
+                        });
+                        path.addEventListener('mousemove', (e) => showIndiaMapTooltip(e, label, n, pct));
+                        path.addEventListener('mouseleave', () => {
+                            path.style.filter = 'none';
+                            hideIndiaMapTooltip();
+                        });
+                    });
+
+                    const stage = document.createElement('div');
+                    stage.id = 'india-map-stage';
+                    stage.className = 'relative w-full max-w-4xl mx-auto';
+                    stage.appendChild(svg);
+
+                    container.innerHTML = '';
+                    container.appendChild(stage);
+
+                    const minLegend = document.getElementById('india-map-legend-min');
+                    const maxLegend = document.getElementById('india-map-legend-max');
+                    if (minLegend) minLegend.textContent = minV.toLocaleString('en-IN');
+                    if (maxLegend) maxLegend.textContent = maxV.toLocaleString('en-IN');
+
+                    const listEl = document.getElementById('india-map-top-list');
+                    if (listEl) {
+                        listEl.innerHTML = ranked.map((entry, i) => `
+                                <li class="flex justify-between gap-2 border-b border-[#FDEBD0]/60 pb-2 last:border-0">
+                                    <span class="text-[#E67E22] shrink-0 w-5">${i + 1}.</span>
+                                    <span class="flex-1 min-w-0 truncate text-left text-xs">${escapeHtml(entry.name)}</span>
+                                    <span class="text-[#7D3C15] shrink-0 text-[11px]">${entry.pct.toFixed(1)}%</span>
+                                </li>`).join('');
+                    }
+                })
+                .catch((err) => {
+                    console.warn('India map:', err);
+                    container.innerHTML = `
+                        <p class="text-sm text-[#7F8C8D] p-6 text-center">
+                            Could not load <code class="font-mono">india-map.svg</code>. Place it next to this HTML file.
+                        </p>`;
+                });
+        }
+
+        function loadFromBackend() {
+            const url = `${API_BASE_URL}/api/conversations?format=csv`;
+            const opts = {};
+            if (API_KEY) opts.headers = { 'X-Api-Key': API_KEY };
+
+            return fetch(url, opts)
+                .then(async (res) => {
+                    if (!res.ok) {
+                        const txt = await res.text().catch(() => '');
+                        throw new Error(`HTTP ${res.status}: ${res.statusText}${txt ? ' - ' + txt : ''}`);
+                    }
+                    return res.text();
+                })
+                .then((csvText) => {
+                    const parsed = Papa.parse(String(csvText || '').replace(/^\ufeff/, ''), {
+                        header: true,
+                        skipEmptyLines: true
+                    });
+                    const rows = parsed.data || [];
+
+                    const grouped = groupByChatId(rows);
+                    buildTableAndAnalytics(grouped);
+
+                    restoreDateFilterUI();
+                    applyDateFilterFromUI();
+                });
+        }
+
+        const AUTH_SESSION_KEY = 'awwa_dashboard_login_v1';
+        const AUTH_NAME_KEY = 'awwa_dashboard_user_name';
+
+        function getStoredName() {
+            try {
+                return localStorage.getItem(AUTH_NAME_KEY) || '';
+            } catch (_) {
+                return '';
+            }
+        }
+
+        function isLoggedIn() {
+            try {
+                return sessionStorage.getItem(AUTH_SESSION_KEY) === 'true';
+            } catch (_) {
+                return false;
+            }
+        }
+
+        window.onload = () => {
+            if (!isLoggedIn()) {
+                const next = encodeURIComponent('first.html');
+                window.location.href = 'login.html?next=' + next;
+                return;
+            }
+
+            // Profile UI (Hey ! {Name})
+            const name = getStoredName() || 'Admin';
+            const profileGreeting = document.getElementById('profile-greeting');
+            if (profileGreeting) profileGreeting.textContent = 'Hey ! ' + name;
+
+            // Logout handler
+            document.getElementById('btn-logout')?.addEventListener('click', () => {
+                try { sessionStorage.removeItem(AUTH_SESSION_KEY); } catch (_) {}
+                try { localStorage.removeItem(AUTH_NAME_KEY); } catch (_) {}
+                const next = encodeURIComponent('first.html');
+                window.location.href = 'login.html?next=' + next;
+            });
+
+            // Close profile dropdown when clicking outside (not on the profile pill / menu)
+            const profileDetails = document.getElementById('profile-menu-details');
+            document.addEventListener('click', (e) => {
+                if (!profileDetails || !profileDetails.open) return;
+                if (profileDetails.contains(e.target)) return;
+                profileDetails.removeAttribute('open');
+            });
+
+            setupDateFilterControls();
+
+            initIndiaMap();
+
+            // Fetch live data and populate table + graphs
+            loadFromBackend().catch(err => {
+                console.error('Backend load error:', err);
+                const body = document.getElementById('table-body');
+                if (body) body.innerHTML = `
+                    <tr><td colspan="11" class="px-6 py-10 text-center text-sm text-red-600">
+                        Failed to load data from backend: ${escapeHtml(err.message || String(err))}
+                    </td></tr>
+                `;
+            });
+
+            // Export handler
+            document.getElementById('btn-export-report')?.addEventListener('click', () => {
+                exportReportCSV();
+            });
+        };
+    </script>
+</body>
+</html>

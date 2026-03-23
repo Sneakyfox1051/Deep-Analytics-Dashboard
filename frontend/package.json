@@ -1,0 +1,12 @@
+{
+  "name": "awwa-dashboard",
+  "private": true,
+  "description": "AWWA dashboard — optional Tailwind CLI build for production CSS",
+  "scripts": {
+    "css:build": "tailwindcss -i ./src/input.css -o ./dist/tailwind.css --minify",
+    "css:watch": "tailwindcss -i ./src/input.css -o ./dist/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}
